@@ -1,0 +1,11 @@
+# 如果在通过 @ConfigurationProperties 注解自定义完属性之后，想要在配置文件当中出现提示效果，此时需要对该模块进行编译，然后将 target 包下的 classes/META-INF 文件夹复制到 resource 目录下才可以有提示效果，不过此时会产生两份，所以一般在复制完之后建议删除原先编译过后的 target 包下的 classes/META-INF 文件夹(但如果删除 resource 目录下的就不会出现提示效果了)，这样就只会提示一份了。另外提示一下，如果想要在配置文件当中的提示信息那有注释提示信息，此时就需要我们在自定义 @ConfigurationProperties 注解成员变量属性时，对每个文档添加注释描述信息即可。
+
+# 如果想要将这个模块包打包给其他模块使用，并且对这些自定义属性在其他模块也是可见的，此时就可以采用上述的方法直接对该模块进行 install 安装，但是安装的时候需要注意要把 pom 文件下的 build 标签去掉，否则会出现报错，不过这个时候在其他模块导入该模块的时候会出现两个提示对应的自定义属性，还是和上面的原因一样，是因为我们把 target 包下的 classes/META-INF 文件夹复制到 resource 目录下，相当于又弄了一份，此时只要删除 resource 目录下即可，然后在打包安装。其实也可以说只要啥都不用配置，只要在项目的 pom 文件下引入 spring-boot-configuration-processor 这个包就可以直接 install 安装到本地仓库，其他模块就可以直接使用了自定义属性的提示功能了。不过如果需要在自己的模块下可见这些自定义属性，则需要复制 classes/META-INF 文件夹复制到 resource 目录下才可以有提示效果。不过还有一种方法，就是通过 spring.factories 文件。
+
+# 引入自定义模块的属性。如果点击跳转到对应源代码的时候，出现了两份，那是因为目标源文件当中 resource 目录下，又出现了 META-INF 文件夹的 spring-configuration-metadata.json 文件了。如果没有出现提示，那在配了 spring.factories 文件的前提下，直接编译一下就可以有提示了，当然前提是得引入 spring-boot-configuration-processor 这个包。然后安装的话，需要将 pom 文件夹下的 build 标签注释掉
+remote:
+  client:
+    access-key: Carl
+    secret-key: abcdefg
+
+# 还有除了上述的方法之外，还可以在 resource 目录，新建出 META-INF 文件夹，然后在这个文件夹下 新建 spring.factories 这个文件(注意：文件必须是这个名称，且必须在 resource 目录下 的 META-INF 文件夹下)，然后在这个文件中配置 org.springframework.boot.autoconfigure.EnableAutoConfiguration=全包名类路径；这个全包名类路径就是你的那个自定义属性的要进行提示的类路径。当然还可以进行一些其他的配置，比如过滤器什么的，注意这个文件是有提示功能的。而且当一个模块配置了这个文件之后，然后直接打包编译就可以在自己模块下可见这些提示的自定义属性了，不需要拷贝 spring-configuration-metadata.json 文件了。(推荐使用这种方式，无需拷贝文件，且还不会出现两份显示自定义属性值的情况，也不需要在安装的时候，然后又删除拷贝过来的文件，只需简单配置 spring.factories 文件即可)
