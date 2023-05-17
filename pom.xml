@@ -5,6 +5,7 @@
     <packaging>pom</packaging>
     <modules>
         <module>binapi-interface</module>
+        <module>binapi-client-sdk</module>
     </modules>
     <parent>
         <groupId>org.springframework.boot</groupId>
