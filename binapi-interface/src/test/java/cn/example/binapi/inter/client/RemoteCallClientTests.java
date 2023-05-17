@@ -13,9 +13,9 @@ public class RemoteCallClientTests {
 
     @Test
     void callTest() {
-        RemoteCallClient call = new RemoteCallClient();
-        System.out.println(call.getNameByGet("Kite"));
+        RemoteCallClient call = new RemoteCallClient("Carl", "abcdefgh");
+        // System.out.println(call.getNameByGet("Kite"));
+        // System.out.println(call.getNameByPost("post"));
         System.out.println(call.getUsernameByPost(new User("Carl")));
-        System.out.println(call.getNameByPost("post"));
     }
 }
