@@ -1,7 +1,7 @@
-package cn.example.binapi.inter.client;
+package cn.example.binapi.sdk.config.client;
 
-import cn.example.binapi.inter.Model.User;
-import cn.example.binapi.inter.utils.SignUtil;
+import cn.example.binapi.sdk.config.Model.User;
+import cn.example.binapi.sdk.config.util.SignUtil;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
@@ -11,8 +11,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -29,7 +27,7 @@ import java.util.Map;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-public class RemoteCallClient {
+public class RemoteClientCall {
 
     private String accessKey;
 
@@ -45,7 +43,7 @@ public class RemoteCallClient {
         return result;
     }
 
-    public String getNameByPost(@RequestParam String name) {
+    public String getNameByPost(String name) {
         // 可以单独传入http参数，这样参数会自动做URL编码，拼接在URL中
         HashMap<String, Object> paramMap = new HashMap<>();
         paramMap.put("name", name);
@@ -55,11 +53,10 @@ public class RemoteCallClient {
         return result;
     }
 
-    public String getUsernameByPost(@RequestBody User user) {
+    public String getUsernameByPost(User user) {
         String userJson = JSONUtil.toJsonStr(user);
 
-        HttpResponse response = HttpRequest.post("http://127.0.0.1:8123/api/name/user")
-                .addHeaders(getHeaders(userJson))  // 请求头
+        HttpResponse response = HttpRequest.post("http://127.0.0.1:8123/api/name/user").addHeaders(getHeaders(userJson))  // 请求头
                 .body(userJson) // 请求体
                 .execute();    // 发送请求
         log.info(String.valueOf(response.getStatus()));
