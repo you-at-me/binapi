@@ -1,7 +1,7 @@
-package cn.example.binapi.sdk.config.client;
+package cn.example.binapi.sdk.client;
 
-import cn.example.binapi.sdk.config.Model.User;
-import cn.example.binapi.sdk.config.util.SignUtil;
+import cn.example.binapi.sdk.Model.User;
+import cn.example.binapi.sdk.util.SignUtil;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
@@ -18,7 +18,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 调用第三方接口的客户端
+ * 远程调用第三方接口的客户端
  *
  * @author Carl
  * @since 2023-05-17
@@ -56,7 +56,8 @@ public class RemoteClientCall {
     public String getUsernameByPost(User user) {
         String userJson = JSONUtil.toJsonStr(user);
 
-        HttpResponse response = HttpRequest.post("http://127.0.0.1:8123/api/name/user").addHeaders(getHeaders(userJson))  // 请求头
+        HttpResponse response = HttpRequest.post("http://127.0.0.1:8123/api/name/user")
+                .addHeaders(getHeaders(userJson))  // 请求头
                 .body(userJson) // 请求体
                 .execute();    // 发送请求
         log.info(String.valueOf(response.getStatus()));

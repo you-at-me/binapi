@@ -1,6 +1,6 @@
-package cn.example.binapi.sdk.config;
+package cn.example.binapi.sdk;
 
-import cn.example.binapi.sdk.config.client.RemoteClientCall;
+import cn.example.binapi.sdk.client.RemoteClientCall;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -31,6 +31,9 @@ public class RemoteClientProperties {
      */
     private String secretKey;
 
+    /**
+     * 一旦自定义的属性在其他的模块配置了值之后，就会触发这里的远程调用客户端 RemoteClientCall 类的自动装配，此时其他模块在使用的时候，只需要直接将 RemoteClientCall 类注入即可使用
+     */
     @Bean
     public RemoteClientCall remoteClientCall() {
         return new RemoteClientCall(accessKey, secretKey);

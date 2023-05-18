@@ -1,7 +1,7 @@
-package cn.example.binapi.inter.controller;
+package cn.example.binapi.test.controller;
 
-import cn.example.binapi.inter.Model.User;
-import cn.example.binapi.inter.utils.SignUtil;
+import cn.example.binapi.sdk.Model.User;
+import cn.example.binapi.sdk.util.SignUtil;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;

@@ -1,4 +1,4 @@
-package cn.example.binapi.sdk.config.util;
+package cn.example.binapi.sdk.util;
 
 import cn.hutool.crypto.digest.DigestAlgorithm;
 import cn.hutool.crypto.digest.Digester;

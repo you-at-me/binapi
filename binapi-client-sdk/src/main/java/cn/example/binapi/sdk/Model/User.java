@@ -1,4 +1,4 @@
-package cn.example.binapi.sdk.config.Model;
+package cn.example.binapi.sdk.Model;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
