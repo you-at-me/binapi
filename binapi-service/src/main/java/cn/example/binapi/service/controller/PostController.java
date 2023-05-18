@@ -3,15 +3,15 @@ package cn.example.binapi.service.controller;
 import cn.example.binapi.common.model.entity.User;
 import cn.example.binapi.service.annotation.AuthCheck;
 import cn.example.binapi.service.common.BaseResponse;
-import cn.example.binapi.service.common.DeleteRequest;
+import cn.example.binapi.common.common.UserDeleteRequest;
 import cn.example.binapi.service.common.ErrorCode;
 import cn.example.binapi.service.common.ResultUtils;
-import cn.example.binapi.service.constant.CommonConstant;
+import cn.example.binapi.common.constant.CommonConstant;
 import cn.example.binapi.service.exception.BusinessException;
-import cn.example.binapi.service.model.dto.post.PostAddRequest;
-import cn.example.binapi.service.model.dto.post.PostQueryRequest;
-import cn.example.binapi.service.model.dto.post.PostUpdateRequest;
-import cn.example.binapi.service.model.entity.Post;
+import cn.example.binapi.common.model.dto.post.PostAddRequest;
+import cn.example.binapi.common.model.dto.post.PostQueryRequest;
+import cn.example.binapi.common.model.dto.post.PostUpdateRequest;
+import cn.example.binapi.common.model.entity.Post;
 import cn.example.binapi.service.service.PostService;
 import cn.example.binapi.service.service.UserService;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -67,7 +67,7 @@ public class PostController {
      * 删除
      */
     @PostMapping("/delete")
-    public BaseResponse<Boolean> deletePost(@RequestBody DeleteRequest deleteRequest, HttpServletRequest request) {
+    public BaseResponse<Boolean> deletePost(@RequestBody UserDeleteRequest deleteRequest, HttpServletRequest request) {
         if (deleteRequest == null || deleteRequest.getId() <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }

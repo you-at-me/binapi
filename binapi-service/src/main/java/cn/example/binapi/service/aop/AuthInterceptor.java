@@ -19,6 +19,7 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 
@@ -43,6 +44,12 @@ public class AuthInterceptor {
         HttpServletRequest request = ((ServletRequestAttributes) requestAttributes).getRequest();
         // 当前登录用户
         User user = userService.getLoginUser(request);
+        if (Objects.isNull(user)) throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
+        // if (CollectionUtils.isNotEmpty(anyRole) || StringUtils.isNotBlank(mustRole)) {
+        //     throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
+        // }
+
+        // 执行到这里表示用户具有身份，可以访问对应接口
         // 拥有任意权限即通过：即表示当前请求的用户角色包含在任意角色里即可通过
         if (CollectionUtils.isNotEmpty(anyRole)) {
             String userRole = user.getRole();

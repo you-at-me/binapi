@@ -4,23 +4,28 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="cn.example.binapi.service.mapper.UserMapper">
 
-    <resultMap id="BaseResultMap" type="cn.example.binapi.service.model.entity.User">
+    <resultMap id="BaseResultMap" type="cn.example.binapi.common.model.entity.User">
         <id property="id" column="id" jdbcType="BIGINT"/>
-        <result property="userName" column="userName" jdbcType="VARCHAR"/>
-        <result property="userAccount" column="userAccount" jdbcType="VARCHAR"/>
-        <result property="userAvatar" column="userAvatar" jdbcType="VARCHAR"/>
+        <result property="username" column="username" jdbcType="VARCHAR"/>
+        <result property="account" column="account" jdbcType="VARCHAR"/>
+        <result property="email" column="email" jdbcType="VARCHAR"/>
+        <result property="phone" column="phone" jdbcType="VARCHAR"/>
+        <result property="avatar" column="avatar" jdbcType="VARCHAR"/>
         <result property="gender" column="gender" jdbcType="TINYINT"/>
-        <result property="userRole" column="userRole" jdbcType="VARCHAR"/>
-        <result property="userPassword" column="userPassword" jdbcType="VARCHAR"/>
-        <result property="createTime" column="createTime" jdbcType="TIMESTAMP"/>
-        <result property="updateTime" column="updateTime" jdbcType="TIMESTAMP"/>
+        <result property="role" column="role" jdbcType="VARCHAR"/>
+        <result property="password" column="password" jdbcType="VARCHAR"/>
+        <result property="accessKey" column="access_key" jdbcType="VARCHAR"/>
+        <result property="secretKey" column="secret_key" jdbcType="VARCHAR"/>
+        <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+        <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
         <result property="isDelete" column="isDelete" jdbcType="TINYINT"/>
     </resultMap>
 
     <sql id="Base_Column_List">
-        id,userName,userAccount,
-        userAvatar,gender,userRole,
-        userPassword,createTime,updateTime,
-        isDelete
+        id
+        ,username,account,
+        ,email,phone,avatar,gender,
+        role,password,access_key,secret_key,create_time,
+        update_time,isDelete
     </sql>
 </mapper>

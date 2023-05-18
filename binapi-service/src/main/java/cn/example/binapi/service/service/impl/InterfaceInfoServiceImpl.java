@@ -10,13 +10,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 /**
-* @author zyshu
-* @description 针对表【interface_info(接口信息)】的数据库操作Service实现
-* @createDate 2023-05-13 20:57:53
-*/
+ * 接口信息表实现类
+ * @author Carl
+ */
 @Service
-public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, InterfaceInfo>
-    implements InterfaceInfoService {
+public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, InterfaceInfo> implements InterfaceInfoService {
 
     @Override
     public void validInterfaceInfo(InterfaceInfo interfaceInfo, boolean b) {
@@ -29,7 +27,7 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
                 throw new BusinessException(ErrorCode.PARAMS_ERROR);
             }
         }
-        if(StringUtils.isNotBlank(name) && name.length() < 50) {
+        if (StringUtils.isNotBlank(name) && name.length() < 50) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "名称过长");
         }
     }

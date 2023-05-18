@@ -1,7 +1,6 @@
 package cn.example.binapi.common.model.vo;
 
 import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -11,7 +10,6 @@ import java.util.Date;
  * 接口信息
  * @TableName interface_info
  */
-@TableName(value ="interface_info")
 @Data
 public class InterfaceInfoVO implements Serializable {
     /**
@@ -28,6 +26,11 @@ public class InterfaceInfoVO implements Serializable {
      * 描述
      */
     private String description;
+
+    /**
+     * 请求类型
+     */
+    private String method;
 
     /**
      * 接口地址
@@ -55,20 +58,21 @@ public class InterfaceInfoVO implements Serializable {
     private Float price;
 
     /**
+     * 接口状态（0-关闭，1-开启）
+     */
+    private Integer status;
+
+    /**
      * 剩余次数
      */
     @TableField(exist = false)
     private Integer leftNum;
 
     /**
-     * 接口状态（0-关闭，1-开启）
+     * 总调用次数
      */
-    private Integer status;
-
-    /**
-     * 请求类型
-     */
-    private String method;
+    @TableField(exist = false)
+    private Integer totalNum;
 
     /**
      * 创建人

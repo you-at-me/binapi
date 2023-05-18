@@ -1,6 +1,6 @@
 package cn.example.binapi.interfaces.controller;
 
-import cn.example.binapi.interfaces.model.entity.Mail;
+import cn.example.binapi.common.model.entity.Mail;
 import com.google.gson.Gson;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -74,8 +74,7 @@ public class MailController {
             message.setFrom(new InternetAddress(from));
 
             // Set To: 头部头字段
-            message.addRecipient(Message.RecipientType.TO,
-                    new InternetAddress(mail.getToMail()));
+            message.addRecipient(Message.RecipientType.TO, new InternetAddress(mail.getToMail()));
 
             // Set Subject: 头部头字段
             message.setSubject("ALIAS-API开放平台用户邮件");

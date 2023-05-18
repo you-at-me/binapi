@@ -18,7 +18,7 @@ public class MainController {
     /**
      * 请求转发
      */
-    @RequestMapping("/main")
+    @RequestMapping("main")
     public String MainRedirect(HttpServletRequest request) {
         log.info("mainRedirect....");
         return authService.mainRedirect(request);

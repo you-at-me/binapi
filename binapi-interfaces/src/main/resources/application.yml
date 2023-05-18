@@ -1,7 +1,7 @@
 server:
   port: 9000
   servlet:
-    context-path: /api
+    context-path: /interfaces
 spring:
   mvc:
     pathmatch:
@@ -17,10 +17,3 @@ spring:
     username: zhexunchen@qq.com
     password: ualqybfjbbnhcaab
     default-encoding: utf-8
-# 导入 starter 包自定义配置
-alias:
-  openapi:
-    client:
-      secret-key: Carl
-      app-id: 123456
-      access-key: abcd

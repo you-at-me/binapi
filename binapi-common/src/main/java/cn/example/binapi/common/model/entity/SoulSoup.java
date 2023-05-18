@@ -1,7 +1,6 @@
 package cn.example.binapi.common.model.entity;
 
 import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -12,7 +11,6 @@ import java.util.Date;
  *
  * @TableName soul_soup
  */
-@TableName(value ="soul_soup")
 @Data
 public class SoulSoup implements Serializable {
     /**

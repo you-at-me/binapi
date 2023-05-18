@@ -17,7 +17,7 @@ public class SoupController {
     @Resource
     private SoulSoupService soulSoupService;
 
-    @GetMapping("/random")
+    @GetMapping("random")
     public String randomSoulSoup(Object object) {
         return soulSoupService.getRandom();
     }

@@ -2,7 +2,6 @@ package cn.example.binapi.common.model.entity;
 
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableLogic;
-import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -13,7 +12,6 @@ import java.util.Date;
  *
  * @TableName interface_info
  */
-@TableName(value ="interface_info")
 @Data
 public class InterfaceInfo implements Serializable {
     /**
@@ -32,19 +30,20 @@ public class InterfaceInfo implements Serializable {
     private String description;
 
     /**
+     * 请求类型
+     */
+    private String method;
+
+    /**
      * 接口地址
      */
     private String url;
 
     /**
-     * 计费规则(元/条)
-     */
-    private Float price;
-
-    /**
      * 请求参数
      */
     private String requestParams;
+
 
     /**
      * 请求头
@@ -57,10 +56,9 @@ public class InterfaceInfo implements Serializable {
     private String responseHeader;
 
     /**
-     * 剩余次数
+     * 计费规则(元/条)
      */
-    @TableField(exist = false)
-    private Integer leftNum;
+    private Float price;
 
     /**
      * 接口状态（0-关闭，1-开启）
@@ -68,9 +66,16 @@ public class InterfaceInfo implements Serializable {
     private Integer status;
 
     /**
-     * 请求类型
+     * 剩余次数
      */
-    private String method;
+    @TableField(exist = false)
+    private Integer leftNum;
+
+    /**
+     * 总调用次数
+     */
+    @TableField(exist = false)
+    private Integer totalNum;
 
     /**
      * 创建人

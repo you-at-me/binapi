@@ -13,7 +13,7 @@ import java.lang.annotation.Target;
 public @interface AuthCheck {
 
     /**
-     * 有任何一个角色
+     * 有任何一个角色，即普通角色，和管理员角色
      */
     String[] anyRole() default "";
 

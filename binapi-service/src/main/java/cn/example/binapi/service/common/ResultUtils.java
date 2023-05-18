@@ -9,7 +9,14 @@ public class ResultUtils {
      * 成功
      */
     public static <T> BaseResponse<T> success(T data) {
-        return new BaseResponse<>(0, data, "ok");
+        return new BaseResponse<>(ErrorCode.SUCCESS.getCode(), data, ErrorCode.SUCCESS.getMessage());
+    }
+
+    /**
+     * 失败
+     */
+    public static <T> BaseResponse<T> error() {
+        return new BaseResponse<>(ErrorCode.FORBIDDEN_ERROR.getCode(), null, ErrorCode.FORBIDDEN_ERROR.getMessage());
     }
 
     /**

@@ -16,7 +16,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(BusinessException.class)
     public BaseResponse<?> businessExceptionHandler(BusinessException e) {
-        log.error("businessException: " + e.getMessage(), e);
+        log.error("businessException: " + e.getMessage(), e); // 这里的 e 打印出了所有相关异常，生产阶段建议注释掉
         return ResultUtils.error(e.getCode(), e.getMessage());
     }
 

@@ -1,37 +1,47 @@
 package cn.example.binapi.service.controller;
 
+import cn.example.binapi.common.common.InterfaceIdRequest;
+import cn.example.binapi.common.common.UserDeleteRequest;
+import cn.example.binapi.common.constant.CommonConstant;
+import cn.example.binapi.common.model.dto.interfaceinfo.InterfaceInfoAddRequest;
+import cn.example.binapi.common.model.dto.interfaceinfo.InterfaceInfoInvokeRequest;
+import cn.example.binapi.common.model.dto.interfaceinfo.InterfaceInfoQueryRequest;
+import cn.example.binapi.common.model.dto.interfaceinfo.InterfaceInfoUpdateRequest;
 import cn.example.binapi.common.model.entity.InterfaceInfo;
 import cn.example.binapi.common.model.entity.User;
 import cn.example.binapi.common.model.entity.UserInterfaceInfo;
 import cn.example.binapi.sdk.Model.Api;
 import cn.example.binapi.sdk.client.RemoteCallClient;
 import cn.example.binapi.service.annotation.AuthCheck;
-import cn.example.binapi.service.common.*;
-import cn.example.binapi.service.constant.CommonConstant;
+import cn.example.binapi.service.common.BaseResponse;
+import cn.example.binapi.service.common.ErrorCode;
+import cn.example.binapi.service.common.ResultUtils;
 import cn.example.binapi.service.exception.BusinessException;
-import cn.example.binapi.service.model.dto.interfaceinfo.InterfaceInfoAddRequest;
-import cn.example.binapi.service.model.dto.interfaceinfo.InterfaceInfoInvokeRequest;
-import cn.example.binapi.service.model.dto.interfaceinfo.InterfaceInfoQueryRequest;
-import cn.example.binapi.service.model.dto.interfaceinfo.InterfaceInfoUpdateRequest;
+import cn.example.binapi.common.model.enums.InterfaceStateInfoEnum;
 import cn.example.binapi.service.service.InterfaceInfoService;
+import cn.example.binapi.service.service.UserInterfaceInfoService;
 import cn.example.binapi.service.service.UserService;
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
-import java.util.Set;
+import java.util.Objects;
+
+import static cn.example.binapi.common.constant.RedisConstant.INTERFACE_PREFIX;
 
 /**
  * 帖子接口
  */
 @RestController
-@RequestMapping("/interfaceInfo")
+@RequestMapping("/interface_info")
 @Slf4j
 public class InterfaceInfoController {
 
@@ -40,6 +50,12 @@ public class InterfaceInfoController {
 
     @Resource
     private UserService userService;
+
+    @Resource
+    private UserInterfaceInfoService userInterfaceInfoService;
+
+    @Resource
+    private StringRedisTemplate stringRedisTemplate;
 
     // region 增删改查
 
@@ -69,7 +85,7 @@ public class InterfaceInfoController {
      * 删除
      */
     @PostMapping("/delete")
-    public BaseResponse<Boolean> deleteInterfaceInfo(@RequestBody DeleteRequest deleteRequest, HttpServletRequest request) {
+    public BaseResponse<Boolean> deleteInterfaceInfo(@RequestBody UserDeleteRequest deleteRequest, HttpServletRequest request) {
         if (deleteRequest == null || deleteRequest.getId() <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
@@ -116,23 +132,11 @@ public class InterfaceInfoController {
     }
 
     /**
-     * 根据 id 获取
-     */
-    @GetMapping("/get")
-    public BaseResponse<InterfaceInfo> getInterfaceInfoById(long id) {
-        if (id <= 0) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR);
-        }
-        InterfaceInfo interfaceInfo = interfaceInfoService.getById(id);
-        return ResultUtils.success(interfaceInfo);
-    }
-
-    /**
      * 上线接口
      */
     @PostMapping("/online")
     @AuthCheck(mustRole = "admin")
-    public BaseResponse<Boolean> onlineInterfaceInfo(@RequestBody IdRequest idRequest) {
+    public BaseResponse<Boolean> onlineInterfaceInfo(@RequestBody InterfaceIdRequest idRequest) {
         if (idRequest == null || idRequest.getId() == 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
@@ -140,15 +144,16 @@ public class InterfaceInfoController {
         // 判断接口是否存在
         long id = idRequest.getId();
         log.info("id: {}", id);
-        InterfaceInfo oldInterfaceInfo = (InterfaceInfo) redisTemplate.opsForValue().get(INTERFACE_PREFIX + id);
-        if (oldInterfaceInfo == null) {
+        String interfaceInfoJson = stringRedisTemplate.opsForValue().get(INTERFACE_PREFIX + id);
+        InterfaceInfo oldInterfaceInfo = JSONUtil.toBean(interfaceInfoJson, InterfaceInfo.class);
+        if (oldInterfaceInfo != null) {
             oldInterfaceInfo = interfaceInfoService.getById(id);
         }
         if (oldInterfaceInfo == null) {
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
         }
 
-        // todo 验证接口是否可以调用，修改调用
+        // TODO 验证接口是否可以调用，修改调用
         //        User user = new User();
         //        user.setUsername("test");
         //        String username = aliasOpenapiClient.getUsernameByPost(user);
@@ -156,34 +161,31 @@ public class InterfaceInfoController {
         //            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "接口验证失败");
         //        }
 
-        // 更新状态
+        // 更新状态，仅本人或者管理员才可修改
         InterfaceInfo newInterfaceInfo = new InterfaceInfo();
         newInterfaceInfo.setId(id);
-        newInterfaceInfo.setStatus(1);
+        newInterfaceInfo.setStatus(InterfaceStateInfoEnum.ONLINE.getValue());
         boolean result = interfaceInfoService.updateById(newInterfaceInfo);
-        Set keys = redisTemplate.keys(INTERFACE_PREFIX + "*");
-        redisTemplate.delete(keys);
+        // 删除 redis 中旧的缓存数据，只有当该条数据再次查询的时候则将其缓存当 redis 当中
+        stringRedisTemplate.delete(INTERFACE_PREFIX + id);
         return ResultUtils.success(result);
     }
 
     /**
      * 下线接口
-     *
-     * @param idRequest
-     * @param request
-     * @return
      */
     @PostMapping("/offline")
     @AuthCheck(mustRole = "admin")
-    public BaseResponse<Boolean> offlineInterfaceInfo(@RequestBody IdRequest idRequest, HttpServletRequest request) {
-        if (idRequest == null || idRequest.getId() == 0) {
+    public BaseResponse<Boolean> offlineInterfaceInfo(@RequestBody InterfaceIdRequest idRequest, HttpServletRequest request) {
+        if (Objects.isNull(idRequest) || idRequest.getId() == 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
 
         // 判断接口是否存在
         long id = idRequest.getId();
         log.info("id: {}", id);
-        InterfaceInfo oldInterfaceInfo = (InterfaceInfo) redisTemplate.opsForValue().get(INTERFACE_PREFIX + id);
+        String interfaceInfoJson = stringRedisTemplate.opsForValue().get(INTERFACE_PREFIX + id);
+        InterfaceInfo oldInterfaceInfo = JSONUtil.toBean(interfaceInfoJson, InterfaceInfo.class);
         if (oldInterfaceInfo == null) {
             oldInterfaceInfo = interfaceInfoService.getById(id);
         }
@@ -194,10 +196,9 @@ public class InterfaceInfoController {
         // 更新接口状态
         InterfaceInfo newInterfaceInfo = new InterfaceInfo();
         newInterfaceInfo.setId(id);
-        newInterfaceInfo.setStatus(0);
+        newInterfaceInfo.setStatus(InterfaceStateInfoEnum.OFFLINE.getValue());
         boolean result = interfaceInfoService.updateById(newInterfaceInfo);
-        Set keys = redisTemplate.keys(INTERFACE_PREFIX + "*");
-        redisTemplate.delete(keys);
+        stringRedisTemplate.delete(INTERFACE_PREFIX + id);
         return ResultUtils.success(result);
     }
 
@@ -212,8 +213,8 @@ public class InterfaceInfoController {
 
         long id = interfaceInfoInvokeRequest.getId();
         String userRequestParams = ""; // 防止trim报npe
-        if (interfaceInfoInvokeRequest.getUserRequestParams() != null) {
-            userRequestParams = interfaceInfoInvokeRequest.getUserRequestParams().trim();
+        if (interfaceInfoInvokeRequest.getRequestParams() != null) {
+            userRequestParams = interfaceInfoInvokeRequest.getRequestParams().trim();
         }
         String method = interfaceInfoInvokeRequest.getMethod();
         String url = interfaceInfoInvokeRequest.getUrl();
@@ -254,21 +255,30 @@ public class InterfaceInfoController {
         RemoteCallClient remoteCallClient = new RemoteCallClient(appId, accessKey, secretKey);
         String result = remoteCallClient.getResult(api);
 
-        Set keys1 = (Set) redisTemplate.opsForValue().get(USER_INTERFACE_PREFIX + "*");
-        Set keys2 = (Set) redisTemplate.opsForValue().get(INTERFACE_PREFIX + "*");
-        redisTemplate.delete(keys1);
-        redisTemplate.delete(keys2);
+        // Set keys1 = (Set) redisTemplate.opsForValue().get(USER_INTERFACE_PREFIX + "*");
+        // Set keys2 = (Set) redisTemplate.opsForValue().get(INTERFACE_PREFIX + "*");
+        // redisTemplate.delete(keys1);
+        // redisTemplate.delete(keys2);
 
         return ResultUtils.success(result);
     }
 
     /**
      * 根据 id 获取
-     *
-     * @param id
-     * @return
      */
     @GetMapping("/get")
+    public BaseResponse<InterfaceInfo> getInterfaceInfoById(long id) {
+        if (id <= 0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        InterfaceInfo interfaceInfo = interfaceInfoService.getById(id);
+        return ResultUtils.success(interfaceInfo);
+    }
+
+    /**
+     * 根据 id 获取
+     */
+    @GetMapping("/gets")
     public BaseResponse<InterfaceInfo> getInterfaceInfoById(long id, HttpServletRequest request) {
         if (id <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);

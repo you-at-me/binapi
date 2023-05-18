@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import javax.servlet.http.HttpServletRequest;
 
 /**
- * 用户服务
+ * 用户服务接口
  */
 public interface UserService extends IService<User> {
 
@@ -26,14 +26,12 @@ public interface UserService extends IService<User> {
      *
      * @param userAccount  用户账户
      * @param userPassword 用户密码
-     * @param request
      * @return 脱敏后的用户信息
      */
     User userLogin(String userAccount, String userPassword, HttpServletRequest request);
 
     /**
      * 获取当前登录用户
-     * @return
      */
     User getLoginUser(HttpServletRequest request);
 

@@ -4,26 +4,51 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="cn.example.binapi.service.mapper.InterfaceInfoMapper">
 
-    <resultMap id="BaseResultMap" type="cn.example.binapi.service.model.entity.InterfaceInfo">
+    <resultMap id="BaseResultMap" type="cn.example.binapi.common.model.entity.InterfaceInfo">
         <id property="id" column="id" jdbcType="BIGINT"/>
         <result property="name" column="name" jdbcType="VARCHAR"/>
         <result property="description" column="description" jdbcType="VARCHAR"/>
-        <result property="method" column="method" jdbcType="VARCHAR"/>
         <result property="url" column="url" jdbcType="VARCHAR"/>
-        <result property="requestHeader" column="requestHeader" jdbcType="VARCHAR"/>
-        <result property="responseHeader" column="responseHeader" jdbcType="VARCHAR"/>
+        <result property="requestParams" column="request_params" jdbcType="VARCHAR"/>
+        <result property="requestHeader" column="request_header" jdbcType="VARCHAR"/>
+        <result property="responseHeader" column="response_header" jdbcType="VARCHAR"/>
+        <result property="price" column="price" jdbcType="DECIMAL"/>
         <result property="status" column="status" jdbcType="INTEGER"/>
-        <result property="userId" column="userId" jdbcType="BIGINT"/>
-        <result property="create_time" column="create_time" jdbcType="TIMESTAMP"/>
-        <result property="update_time" column="update_time" jdbcType="TIMESTAMP"/>
-        <result property="is_delete" column="is_delete" jdbcType="TINYINT"/>
+        <result property="method" column="method" jdbcType="VARCHAR"/>
+        <result property="creator" column="creator" jdbcType="BIGINT"/>
+        <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+        <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+        <result property="isDelete" column="is_delete" jdbcType="TINYINT"/>
     </resultMap>
 
-    <sql id="Base_Column_List">
-        id
-        ,name,description,
-        method,url,requestHeader,
-        responseHeader,status,userId,
-        create_time,update_time,is_delete
-    </sql>
+    <select id="getInterfaceInfoByUserId" resultMap="BaseResultMap">
+        SELECT
+        ii.id AS `id`, ii.name AS `name`, ii.description AS `description`,
+        ii.method AS `method`, ii.request_params AS `requestParams`,
+        ii.request_header AS `requestHeader`, ii.response_header AS `responseHeader`,
+        ii.price AS `price`,
+        ii.url AS `url`, ii.status AS `status`, ii.create_time AS `createTime`,
+        ui.left_num AS `leftNum`
+        FROM
+        tb_user_interface_info ui
+        LEFT JOIN tb_interface_info ii ON ii.id = ui.interface_info_id
+        WHERE
+        ui.creator = #{userId} AND ui.left_num > 0 AND ui.is_delete = 0 AND (ii.is_delete = 0 OR ii.is_delete IS NULL)
+        <if test="ew != null">
+            ${ew.customSqlSegment}
+        </if>
+    </select>
+    <select id="getInterfaceTotalInvokeCounts" resultType="cn.example.binapi.common.model.vo.InterfaceInfoVO">
+        SELECT i.id              AS interface_id,
+               i.name            AS name,
+               i.status          AS status,
+               i.method          AS method,
+               i.is_delete       AS isDelete,
+               SUM(ui.total_num) AS totalNum
+        FROM tb_interface_info i
+                 LEFT JOIN tb_user_interface_info ui ON i.id = ui.interface_info_id
+        WHERE i.is_delete = 0
+          AND ui.is_delete = 0
+        GROUP BY i.id;
+    </select>
 </mapper>

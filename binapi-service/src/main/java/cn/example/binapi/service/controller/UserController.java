@@ -1,14 +1,15 @@
 package cn.example.binapi.service.controller;
 
+import cn.example.binapi.common.common.UserDeleteRequest;
+import cn.example.binapi.common.model.dto.user.*;
 import cn.example.binapi.common.model.entity.User;
+import cn.example.binapi.common.model.vo.UserVO;
 import cn.example.binapi.service.common.BaseResponse;
-import cn.example.binapi.service.common.DeleteRequest;
 import cn.example.binapi.service.common.ErrorCode;
 import cn.example.binapi.service.common.ResultUtils;
 import cn.example.binapi.service.exception.BusinessException;
-import cn.example.binapi.service.model.dto.user.*;
-import cn.example.binapi.service.model.vo.UserVO;
 import cn.example.binapi.service.service.UserService;
+import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.plugins.pagination.PageDTO;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -36,31 +38,31 @@ public class UserController {
     /**
      * 用户注册
      */
-    @PostMapping("/register")
+    @PostMapping("register")
     public BaseResponse<Long> userRegister(@RequestBody UserRegisterRequest userRegisterRequest) {
-        if (userRegisterRequest == null) {
+        if (ObjectUtil.isEmpty(userRegisterRequest)) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        String userAccount = userRegisterRequest.getUserAccount();
-        String userPassword = userRegisterRequest.getUserPassword();
+        String userAccount = userRegisterRequest.getAccount();
+        String userPassword = userRegisterRequest.getPassword();
         String checkPassword = userRegisterRequest.getCheckPassword();
         if (StringUtils.isAnyBlank(userAccount, userPassword, checkPassword)) {
-            return null;
+            return ResultUtils.error(ErrorCode.PARAMS_ERROR);
         }
-        long result = userService.userRegister(userAccount, userPassword, checkPassword);
+        long result = userService.userRegister(userAccount, userPassword, checkPassword); // 成功返回用户ID
         return ResultUtils.success(result);
     }
 
     /**
      * 用户登录
      */
-    @PostMapping("/login")
+    @PostMapping("login")
     public BaseResponse<User> userLogin(@RequestBody UserLoginRequest userLoginRequest, HttpServletRequest request) {
-        if (userLoginRequest == null) {
+        if (Objects.isNull(userLoginRequest)) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        String userAccount = userLoginRequest.getUserAccount();
-        String userPassword = userLoginRequest.getUserPassword();
+        String userAccount = userLoginRequest.getAccount();
+        String userPassword = userLoginRequest.getPassword();
         if (StringUtils.isAnyBlank(userAccount, userPassword)) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
@@ -71,7 +73,7 @@ public class UserController {
     /**
      * 用户注销
      */
-    @PostMapping("/logout")
+    @PostMapping("logout")
     public BaseResponse<Boolean> userLogout(HttpServletRequest request) {
         if (request == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
@@ -99,7 +101,7 @@ public class UserController {
      * 创建用户
      */
     @PostMapping("/add")
-    public BaseResponse<Long> addUser(@RequestBody UserAddRequest userAddRequest, HttpServletRequest request) {
+    public BaseResponse<Long> addUser(@RequestBody UserAddRequest userAddRequest) {
         if (userAddRequest == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
@@ -116,7 +118,7 @@ public class UserController {
      * 删除用户
      */
     @PostMapping("/delete")
-    public BaseResponse<Boolean> deleteUser(@RequestBody DeleteRequest deleteRequest, HttpServletRequest request) {
+    public BaseResponse<Boolean> deleteUser(@RequestBody UserDeleteRequest deleteRequest) {
         if (deleteRequest == null || deleteRequest.getId() <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
@@ -128,7 +130,7 @@ public class UserController {
      * 更新用户
      */
     @PostMapping("/update")
-    public BaseResponse<Boolean> updateUser(@RequestBody UserUpdateRequest userUpdateRequest, HttpServletRequest request) {
+    public BaseResponse<Boolean> updateUser(@RequestBody UserUpdateRequest userUpdateRequest) {
         if (userUpdateRequest == null || userUpdateRequest.getId() == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
@@ -142,7 +144,7 @@ public class UserController {
      * 根据 id 获取用户
      */
     @GetMapping("/get")
-    public BaseResponse<UserVO> getUserById(int id, HttpServletRequest request) {
+    public BaseResponse<UserVO> getUserById(int id) {
         if (id <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
@@ -156,7 +158,7 @@ public class UserController {
      * 获取用户列表
      */
     @GetMapping("/list")
-    public BaseResponse<List<UserVO>> listUser(UserQueryRequest userQueryRequest, HttpServletRequest request) {
+    public BaseResponse<List<UserVO>> listUser(UserQueryRequest userQueryRequest) {
         User userQuery = new User();
         if (userQueryRequest != null) {
             BeanUtils.copyProperties(userQueryRequest, userQuery);
@@ -175,7 +177,7 @@ public class UserController {
      * 分页获取用户列表
      */
     @GetMapping("/list/page")
-    public BaseResponse<Page<UserVO>> listUserByPage(UserQueryRequest userQueryRequest, HttpServletRequest request) {
+    public BaseResponse<Page<UserVO>> listUserByPage(UserQueryRequest userQueryRequest) {
         long current = 1;
         long size = 10;
         User userQuery = new User();

@@ -7,6 +7,7 @@ import cn.hutool.core.util.CharsetUtil;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.json.JSONUtil;
+import com.sun.org.apache.xalan.internal.xsltc.runtime.Constants;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -49,7 +50,7 @@ public class RemoteCallClient {
             return makeRequest(HttpRequest.post(url), api, json).execute().body();
         }
         {
-            return "Incorrect request type, please try again";
+            return Constants.EMPTYSTRING;
         }
     }
 

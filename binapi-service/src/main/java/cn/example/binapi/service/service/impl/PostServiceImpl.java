@@ -3,9 +3,9 @@ package cn.example.binapi.service.service.impl;
 import cn.example.binapi.service.common.ErrorCode;
 import cn.example.binapi.service.exception.BusinessException;
 import cn.example.binapi.service.mapper.PostMapper;
-import cn.example.binapi.service.model.entity.Post;
-import cn.example.binapi.service.model.enums.PostGenderEnum;
-import cn.example.binapi.service.model.enums.PostReviewStatusEnum;
+import cn.example.binapi.common.model.entity.Post;
+import cn.example.binapi.common.model.enums.PostGenderEnum;
+import cn.example.binapi.common.model.enums.PostReviewStatusEnum;
 import cn.example.binapi.service.service.PostService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.apache.commons.lang3.ObjectUtils;
@@ -13,7 +13,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 /**
- * @description 针对表【post(帖子)】的数据库操作Service实现
+ * 帖子表服务实现类
  */
 @Service
 public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements PostService {

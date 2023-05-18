@@ -3,18 +3,19 @@ package cn.example.binapi.common.model.entity;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.extension.activerecord.Model;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
-import java.io.Serializable;
 import java.util.Date;
 
 /**
- * 
  * @TableName auth
  */
+@EqualsAndHashCode(callSuper = true)
 @TableName(value ="auth")
 @Data
-public class Auth implements Serializable {
+public class Auth extends Model<Auth> {
     /**
      * id
      */
