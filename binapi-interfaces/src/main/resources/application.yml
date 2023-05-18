@@ -1,0 +1,26 @@
+server:
+  port: 9000
+  servlet:
+    context-path: /api
+spring:
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/alias_openapi?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true
+    username: root
+    password: 321998
+  # sms service
+  mail:
+    host: smtp.qq.com
+    username: zhexunchen@qq.com
+    password: ualqybfjbbnhcaab
+    default-encoding: utf-8
+# 导入 starter 包自定义配置
+alias:
+  openapi:
+    client:
+      secret-key: Carl
+      app-id: 123456
+      access-key: abcd

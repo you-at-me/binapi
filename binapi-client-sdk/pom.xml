@@ -3,22 +3,17 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.3.9.RELEASE</version>
+        <groupId>cn.example.binapi</groupId>
+        <artifactId>binapi-root</artifactId>
+        <version>1.0</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>binapi-client-sdk</artifactId>
-    <groupId>cn.example.binapi</groupId>
     <version>1.0</version>
 
-    <properties>
-        <maven.compiler.source>8</maven.compiler.source>
-        <maven.compiler.target>8</maven.compiler.target>
-        <hutool-version>5.7.22</hutool-version>
-    </properties>
-
+    <!-- 如果想要将该模块 jar 包安装到本地仓库，则需要将这块的 build 注释掉 -->
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -38,44 +33,7 @@
         <dependency>
             <groupId>cn.hutool</groupId>
             <artifactId>hutool-all</artifactId>
-            <version>${hutool-version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
         </dependency>
     </dependencies>
-
-    <!-- 如果想要将该模块 jar 包安装到本地仓库，则需要将这块的 build 注释掉 -->
-    <!-- <build> -->
-    <!--     <plugins> -->
-    <!--         <plugin> -->
-    <!--             <groupId>org.springframework.boot</groupId> -->
-    <!--             <artifactId>spring-boot-maven-plugin</artifactId> -->
-    <!--             <configuration> -->
-    <!--                 <excludes> -->
-    <!--                     &lt;!&ndash; 避免在打包的时候将该提示功能依赖一起打包带走 &ndash;&gt; -->
-    <!--                     <exclude> -->
-    <!--                         <exclude> -->
-    <!--                             <groupId>org.projectlombok</groupId> -->
-    <!--                             <artifactId>lombok</artifactId> -->
-    <!--                         </exclude> -->
-
-    <!--                     </exclude> -->
-    <!--                 </excludes> -->
-    <!--             </configuration> -->
-    <!--         </plugin> -->
-    <!--     </plugins> -->
-    <!--     &lt;!&ndash;build节点增加内容&ndash;&gt; -->
-    <!--     <resources> -->
-    <!--         <resource> -->
-    <!--             <directory>src/main/resources</directory> -->
-    <!--             &lt;!&ndash;开启过滤，用指定的参数替换directory下的文件中的参数&ndash;&gt; -->
-    <!--             <filtering>true</filtering> -->
-    <!--         </resource> -->
-    <!--     </resources> -->
-
-    <!-- </build> -->
 
 </project>
