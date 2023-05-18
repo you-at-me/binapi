@@ -1,7 +1,6 @@
 package cn.example.binapi.service.controller;
 
 import cn.example.binapi.common.common.InterfaceIdRequest;
-import cn.example.binapi.common.common.UserDeleteRequest;
 import cn.example.binapi.common.constant.CommonConstant;
 import cn.example.binapi.common.model.dto.interfaceinfo.InterfaceInfoAddRequest;
 import cn.example.binapi.common.model.dto.interfaceinfo.InterfaceInfoInvokeRequest;
@@ -10,6 +9,7 @@ import cn.example.binapi.common.model.dto.interfaceinfo.InterfaceInfoUpdateReque
 import cn.example.binapi.common.model.entity.InterfaceInfo;
 import cn.example.binapi.common.model.entity.User;
 import cn.example.binapi.common.model.entity.UserInterfaceInfo;
+import cn.example.binapi.common.model.enums.InterfaceStateInfoEnum;
 import cn.example.binapi.sdk.Model.Api;
 import cn.example.binapi.sdk.client.RemoteCallClient;
 import cn.example.binapi.service.annotation.AuthCheck;
@@ -17,10 +17,10 @@ import cn.example.binapi.service.common.BaseResponse;
 import cn.example.binapi.service.common.ErrorCode;
 import cn.example.binapi.service.common.ResultUtils;
 import cn.example.binapi.service.exception.BusinessException;
-import cn.example.binapi.common.model.enums.InterfaceStateInfoEnum;
 import cn.example.binapi.service.service.InterfaceInfoService;
 import cn.example.binapi.service.service.UserInterfaceInfoService;
 import cn.example.binapi.service.service.UserService;
+import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -28,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -60,44 +61,29 @@ public class InterfaceInfoController {
     // region 增删改查
 
     /**
-     * 创建
+     * 新增接口
      */
-    @PostMapping("/add")
+    @PostMapping("add")
     public BaseResponse<Long> addInterfaceInfo(@RequestBody InterfaceInfoAddRequest interfaceInfoAddRequest, HttpServletRequest request) {
-        if (interfaceInfoAddRequest == null) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR);
-        }
-        InterfaceInfo interfaceInfo = new InterfaceInfo();
-        BeanUtils.copyProperties(interfaceInfoAddRequest, interfaceInfo);
-        // 校验
-        interfaceInfoService.validInterfaceInfo(interfaceInfo, true);
-        User loginUser = userService.getLoginUser(request);
-        interfaceInfo.setCreator(loginUser.getId());
-        boolean result = interfaceInfoService.save(interfaceInfo);
-        if (!result) {
-            throw new BusinessException(ErrorCode.OPERATION_ERROR);
-        }
-        long newInterfaceInfoId = interfaceInfo.getId();
-        return ResultUtils.success(newInterfaceInfoId);
+        return ResultUtils.success(interfaceInfoService.addInterfaceInfo(interfaceInfoAddRequest, request));
     }
 
     /**
      * 删除
      */
-    @PostMapping("/delete")
-    public BaseResponse<Boolean> deleteInterfaceInfo(@RequestBody UserDeleteRequest deleteRequest, HttpServletRequest request) {
-        if (deleteRequest == null || deleteRequest.getId() <= 0) {
+    @PostMapping("/delete/{id}")
+    public BaseResponse<Boolean> deleteInterfaceInfo(@PathVariable("id") long id, HttpServletRequest request) {
+        if (ObjectUtil.isEmpty(id) || id <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         User user = userService.getLoginUser(request);
-        long id = deleteRequest.getId();
         // 判断是否存在
         InterfaceInfo oldInterfaceInfo = interfaceInfoService.getById(id);
-        if (oldInterfaceInfo == null) {
+        if (ObjectUtils.isEmpty(oldInterfaceInfo)) {
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
         }
         // 仅本人或管理员可删除
-        if (!oldInterfaceInfo.getCreator().equals(user.getId()) && !userService.isAdmin(request)) {
+        if (!oldInterfaceInfo.getCreator().equals(user.getId()) && userService.isNotAdmin(request)) {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
         }
         boolean b = interfaceInfoService.removeById(id);
@@ -107,7 +93,7 @@ public class InterfaceInfoController {
     /**
      * 更新
      */
-    @PostMapping("/update")
+    @PostMapping("update")
     public BaseResponse<Boolean> updateInterfaceInfo(@RequestBody InterfaceInfoUpdateRequest interfaceInfoUpdateRequest, HttpServletRequest request) {
         if (interfaceInfoUpdateRequest == null || interfaceInfoUpdateRequest.getId() <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
@@ -124,7 +110,7 @@ public class InterfaceInfoController {
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
         }
         // 仅本人或管理员可修改
-        if (!oldInterfaceInfo.getCreator().equals(user.getId()) && !userService.isAdmin(request)) {
+        if (!oldInterfaceInfo.getCreator().equals(user.getId()) && userService.isNotAdmin(request)) {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
         }
         boolean result = interfaceInfoService.updateById(interfaceInfo);
@@ -134,22 +120,21 @@ public class InterfaceInfoController {
     /**
      * 上线接口
      */
-    @PostMapping("/online")
+    @PostMapping("online")
     @AuthCheck(mustRole = "admin")
     public BaseResponse<Boolean> onlineInterfaceInfo(@RequestBody InterfaceIdRequest idRequest) {
-        if (idRequest == null || idRequest.getId() == 0) {
+        if (ObjectUtil.isNull(idRequest) || idRequest.getId() <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-
         // 判断接口是否存在
         long id = idRequest.getId();
         log.info("id: {}", id);
         String interfaceInfoJson = stringRedisTemplate.opsForValue().get(INTERFACE_PREFIX + id);
         InterfaceInfo oldInterfaceInfo = JSONUtil.toBean(interfaceInfoJson, InterfaceInfo.class);
-        if (oldInterfaceInfo != null) {
+        if (ObjectUtils.isEmpty(oldInterfaceInfo)) { // 如果为空则从数据库当中查找
             oldInterfaceInfo = interfaceInfoService.getById(id);
         }
-        if (oldInterfaceInfo == null) {
+        if (Objects.isNull(oldInterfaceInfo)) {
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
         }
 
