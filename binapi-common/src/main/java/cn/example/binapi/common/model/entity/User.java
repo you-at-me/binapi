@@ -8,7 +8,7 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
- * 用户
+ * 用户:用户表和接口信息表关联可以通过用户 ID 和接口信息表的创建者ID 进行关联
  *
  * @TableName user
  */

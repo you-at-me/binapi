@@ -1,9 +1,9 @@
 package cn.example.binapi.service.controller;
 
-import cn.example.binapi.common.common.UserDeleteRequest;
 import cn.example.binapi.common.model.dto.user.*;
 import cn.example.binapi.common.model.entity.User;
 import cn.example.binapi.common.model.vo.UserVO;
+import cn.example.binapi.service.annotation.AuthCheck;
 import cn.example.binapi.service.common.BaseResponse;
 import cn.example.binapi.service.common.ErrorCode;
 import cn.example.binapi.service.common.ResultUtils;
@@ -15,6 +15,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.plugins.pagination.PageDTO;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -24,7 +25,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
- * 用户接口
+ * 用户接口，用户的登录状态都是依赖 session 的，请求必须携带 Cookie
  */
 @RestController
 @RequestMapping("/user")
@@ -40,7 +41,7 @@ public class UserController {
      */
     @PostMapping("register")
     public BaseResponse<Long> userRegister(@RequestBody UserRegisterRequest userRegisterRequest) {
-        if (ObjectUtil.isEmpty(userRegisterRequest)) {
+        if (ObjectUtil.isNull(userRegisterRequest)) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         String userAccount = userRegisterRequest.getAccount();
@@ -49,7 +50,8 @@ public class UserController {
         if (StringUtils.isAnyBlank(userAccount, userPassword, checkPassword)) {
             return ResultUtils.error(ErrorCode.PARAMS_ERROR);
         }
-        long result = userService.userRegister(userAccount, userPassword, checkPassword); // 成功返回用户ID
+        // 成功返回用户ID
+        long result = userService.userRegister(userAccount, userPassword, checkPassword);
         return ResultUtils.success(result);
     }
 
@@ -100,9 +102,10 @@ public class UserController {
     /**
      * 创建用户
      */
-    @PostMapping("/add")
+    @PostMapping("add")
+    @AuthCheck(mustRole = "admin") // 只有管理员才能创建用户
     public BaseResponse<Long> addUser(@RequestBody UserAddRequest userAddRequest) {
-        if (userAddRequest == null) {
+        if (ObjectUtils.isEmpty(userAddRequest)) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         User user = new User();
@@ -117,19 +120,19 @@ public class UserController {
     /**
      * 删除用户
      */
-    @PostMapping("/delete")
-    public BaseResponse<Boolean> deleteUser(@RequestBody UserDeleteRequest deleteRequest) {
-        if (deleteRequest == null || deleteRequest.getId() <= 0) {
+    @PostMapping("/delete/{id}")
+    public BaseResponse<Boolean> deleteUser(@PathVariable("id") long id) {
+        if (ObjectUtils.isEmpty(id) || id <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        boolean b = userService.removeById(deleteRequest.getId());
+        boolean b = userService.removeById(id);
         return ResultUtils.success(b);
     }
 
     /**
      * 更新用户
      */
-    @PostMapping("/update")
+    @PostMapping("update")
     public BaseResponse<Boolean> updateUser(@RequestBody UserUpdateRequest userUpdateRequest) {
         if (userUpdateRequest == null || userUpdateRequest.getId() == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
@@ -143,9 +146,9 @@ public class UserController {
     /**
      * 根据 id 获取用户
      */
-    @GetMapping("/get")
-    public BaseResponse<UserVO> getUserById(int id) {
-        if (id <= 0) {
+    @GetMapping("/get/{id}")
+    public BaseResponse<UserVO> getUserById(@PathVariable("id") long id) {
+        if (ObjectUtil.isEmpty(id) || id <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         User user = userService.getById(id);
@@ -177,9 +180,7 @@ public class UserController {
      * 分页获取用户列表
      */
     @GetMapping("/list/page")
-    public BaseResponse<Page<UserVO>> listUserByPage(UserQueryRequest userQueryRequest) {
-        long current = 1;
-        long size = 10;
+    public BaseResponse<Page<UserVO>> listUserByPage(UserQueryRequest userQueryRequest, @RequestParam(value = "current", required = false, defaultValue = "0") long current, @RequestParam(value = "size", required = false, defaultValue = "10") long size) {
         User userQuery = new User();
         if (userQueryRequest != null) {
             BeanUtils.copyProperties(userQueryRequest, userQuery);

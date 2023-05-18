@@ -38,7 +38,7 @@ public interface UserService extends IService<User> {
     /**
      * 是否为管理员
      */
-    boolean isAdmin(HttpServletRequest request);
+    boolean isNotAdmin(HttpServletRequest request);
 
     /**
      * 用户注销

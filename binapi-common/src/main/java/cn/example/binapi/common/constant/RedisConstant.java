@@ -13,7 +13,7 @@ public interface RedisConstant {
 
     String GITHUB_STARS_PREFIX = "githubStars_";
 
-    String INTERFACE_PREFIX = "binapi:interface:id:";
+    String INTERFACE_PREFIX = "binapi:interface_info:id:";
 
     String USER_INTERFACE_PREFIX = "userInterface_";
 }

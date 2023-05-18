@@ -8,7 +8,13 @@ public interface UserConstant {
     /**
      * 用户登录态键
      */
-    String USER_LOGIN_STATE = "userLoginState";
+    String USER_LOGIN_STATE = "binapi:userLoginState:id:";
+
+    /**
+     * 用户在 redis 的过期时间
+     */
+    long USER_LOGIN_EXPIRE_TIME = 24 * 60 * 60;
+
 
     /**
      * 系统用户 id（虚拟用户）
