@@ -6,9 +6,9 @@ package cn.example.binapi.common.constant;
 public interface UserConstant {
 
     /**
-     * 用户登录态键
+     * 用户登录态键，session 存储的 key 键
      */
-    String USER_LOGIN_STATE = "binapi:userLoginState:id:";
+    String USER_LOGIN_STATE = "userLoginState";
 
     /**
      * 用户在 redis 的过期时间
