@@ -140,7 +140,7 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
         if (oldInterfaceInfo == null) {
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
         }
-        // 仅本人或管理员可修改
+        // 仅本人或管理员可修改，更新操作不用更新缓存，只有接口被调用的时候再去构建缓存
         if (!oldInterfaceInfo.getCreator().equals(user.getId()) && userService.isNotAdmin(request)) {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
         }
@@ -173,7 +173,8 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
         newInterfaceInfo.setId(id);
         newInterfaceInfo.setStatus(InterfaceStateInfoEnum.ONLINE.getValue());
         boolean result = updateById(newInterfaceInfo);
-        if (!ObjectUtil.isEmpty(stringRedisTemplate.opsForHash().get(INTERFACE_PREFIX, String.valueOf(id)))) {
+        Object strObj = stringRedisTemplate.opsForHash().get(INTERFACE_PREFIX, String.valueOf(id));
+        if (!ObjectUtil.isEmpty(strObj)) {
             // 再次查询如果存在，则删除 redis 中旧的缓存数据，只有当该条数据再次被调用时才将其缓存当 redis 当中
             stringRedisTemplate.opsForHash().delete(INTERFACE_PREFIX, id);
         }
@@ -212,7 +213,6 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
         if (interfaceInfoInvokeRequest == null || interfaceInfoInvokeRequest.getId() == 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-
         long id = interfaceInfoInvokeRequest.getId();
         StringBuilder requestParams = new StringBuilder(); // 防止trim报npe
         if (interfaceInfoInvokeRequest.getRequestParams() != null) {
@@ -223,7 +223,6 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
         log.info("invoke...requestParams: {}", requestParams);
         log.info("invoke...method: {}", method);
         log.info("invoke...url: {}", url);
-
         // 判断接口是否存在，首先从缓存当中获取
         Map<Object, Object> map = stringRedisTemplate.opsForHash().entries(INTERFACE_PREFIX);
         InterfaceInfo o;
@@ -235,19 +234,16 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
             String interfaceJson = JSONUtil.toJsonStr(o);
             stringRedisTemplate.opsForHash().put(INTERFACE_PREFIX, String.valueOf(id), interfaceJson);
         }
-        // 判断接口是否已关闭
-        if (o.getStatus() == 0) {
+        if (o.getStatus() == InterfaceStateInfoEnum.OFFLINE.getValue()) {
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "接口已关闭");
         }
-        // 判断请求方法、请求地址是否为空
         if (StringUtils.isAnyBlank(method, url)) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        // 接口调用，首先获取当前用户，然后获得对应的通用标识符和秘钥
-        User loginUser = userService.getLoginUser(request);
+        User loginUser = userService.getLoginUser(request);//接口调用，首先获取当前用户
         System.out.println(loginUser);
-        String accessKey = loginUser.getAccessKey();
-        String secretKey = loginUser.getSecretKey();
+        String accessKey = loginUser.getAccessKey(); //获得对应的通用标识符
+        String secretKey = loginUser.getSecretKey(); //获得秘钥
 
         Api api = new Api();
         api.setInterfaceId(String.valueOf(id));
@@ -259,7 +255,12 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
 
         Integer appId = 123; // TODO appid
         RemoteCallClient remoteCallClient = new RemoteCallClient(appId, accessKey, secretKey);
-        return remoteCallClient.getResult(api);
+        String result = remoteCallClient.getResult(api);
+        if (StrUtil.isNotBlank(result)) {
+            // 在接口被调用的时候更新缓存，即使已经存在直接覆盖即可
+            stringRedisTemplate.opsForHash().put(INTERFACE_PREFIX, String.valueOf(id), JSONUtil.toJsonStr(o));
+        }
+        return result;
     }
 
     @Override
