@@ -11,7 +11,6 @@ import cn.example.binapi.service.annotation.AuthCheck;
 import cn.example.binapi.service.common.BaseResponse;
 import cn.example.binapi.service.common.ResultUtils;
 import cn.example.binapi.service.service.InterfaceInfoService;
-import cn.example.binapi.service.service.UserService;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -30,10 +29,6 @@ public class InterfaceInfoController {
 
     @Resource
     private InterfaceInfoService interfaceInfoService;
-
-    @Resource
-    private UserService userService;
-
 
     // region 增删改查
 

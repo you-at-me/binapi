@@ -109,7 +109,7 @@ public class UserInterfaceInfoServiceImpl extends ServiceImpl<UserInterfaceInfoM
                 // 如果用户没有该接口，则新增一条数据
                 if (!flag) {
                     UserInterfaceInfo newUserInterface = new UserInterfaceInfo();
-                    newUserInterface.setUserId(userId);
+                    newUserInterface.setCreator(userId);
                     newUserInterface.setInterfaceInfoId(interfaceInfo.getId());
                     newUserInterface.setLeftNum(20);
                     newUserInterfaces.add(newUserInterface);
@@ -145,14 +145,14 @@ public class UserInterfaceInfoServiceImpl extends ServiceImpl<UserInterfaceInfoM
         }
         // 创建时，所有参数必须非空
         if (add) {
-            if (userInterfaceInfo.getInterfaceInfoId() <= 0 || userInterfaceInfo.getUserId() <= 0) {
+            if (userInterfaceInfo.getInterfaceInfoId() <= 0 || userInterfaceInfo.getCreator() <= 0) {
                 throw new BusinessException(ErrorCode.PARAMS_ERROR, "接口或用户不存在");
             }
         }
 
         QueryWrapper<UserInterfaceInfo> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("interface_info_id", userInterfaceInfo.getInterfaceInfoId());
-        queryWrapper.eq("user_id", userInterfaceInfo.getUserId());
+        queryWrapper.eq("user_id", userInterfaceInfo.getCreator());
         UserInterfaceInfo one = this.getOne(queryWrapper);
 
         if (userInterfaceInfo.getLeftNum() <= 0) {
