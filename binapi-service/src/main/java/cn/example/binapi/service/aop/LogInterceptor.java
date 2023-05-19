@@ -40,14 +40,13 @@ public class LogInterceptor {
         Object[] args = point.getArgs();
         String reqParam = "[" + StringUtils.join(args, ", ") + "]";
         // 输出请求日志
-        log.info("request start，id: {}, path: {}, ip: {}, params: {}", requestId, url,
-                httpServletRequest.getRemoteHost(), reqParam);
+        System.out.printf("******request start，id: %s, path: %s, ip: %s, params: %s%n", requestId, url, httpServletRequest.getRemoteHost(), reqParam);
         // 执行原方法，获得被增强方法的返回值，point 表示正在执行的连接点，即切点
         Object result = point.proceed();
         // 输出响应日志
         stopWatch.stop();
         long totalTimeMillis = stopWatch.getTotalTimeMillis();
-        log.info("request end, id: {}, cost: {}ms", requestId, totalTimeMillis);
+        System.out.printf("******request end, id: %s, cost: %sms %n", requestId, totalTimeMillis);
         return result;
     }
 }
