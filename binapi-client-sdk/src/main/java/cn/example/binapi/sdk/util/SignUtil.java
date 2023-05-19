@@ -6,7 +6,6 @@ import cn.hutool.crypto.digest.Digester;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- *
  * 签名工具: api 签名认证是一个很灵活的设计，具体要用到哪些参数、参数名如何一定要根据实际业务场景需求指定
  *
  * @author Carl

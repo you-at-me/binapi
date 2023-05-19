@@ -42,7 +42,7 @@ public class RemoteCallClient {
     }
 
     public String getResult(Api api) {
-        String json = JSONUtil.toJsonStr(api.getBody());
+        String json = JSONUtil.toJsonStr(api.getBody()); // body就是请求参数
         if (GET.equalsIgnoreCase(api.getMethod())) {
             return makeRequest(HttpRequest.get(url), api, json).execute().body();
         }
