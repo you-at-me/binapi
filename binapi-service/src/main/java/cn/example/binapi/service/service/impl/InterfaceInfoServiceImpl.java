@@ -34,7 +34,9 @@ import org.springframework.util.ObjectUtils;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -72,7 +74,7 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
                 throw new BusinessException(ErrorCode.PARAMS_ERROR);
             }
         }
-        if (StringUtils.isNotBlank(name) && name.length() < 50) {
+        if (StringUtils.isNotBlank(name) && name.length() > 50) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "名称过长");
         }
     }
@@ -115,9 +117,9 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
         }
         // 先删除数据库再删除缓存
         boolean isRemove = removeById(id);
-        Object objInterfaceInfo = stringRedisTemplate.opsForHash().get(INTERFACE_PREFIX, id);
-        if (ObjectUtil.isNotEmpty(objInterfaceInfo)) {
-            stringRedisTemplate.opsForHash().delete(INTERFACE_PREFIX, id);
+        Object o = stringRedisTemplate.opsForHash().get(INTERFACE_PREFIX, String.valueOf(id));
+        if (ObjectUtil.isNotEmpty(o)) {
+            stringRedisTemplate.opsForHash().delete(INTERFACE_PREFIX, String.valueOf(id));
         }
         return isRemove;
     }
@@ -153,8 +155,8 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
         // 判断接口是否存在
         long id = idRequest.getId();
         log.info("id: {}", id);
-        String interfaceInfoJson = Objects.requireNonNull(stringRedisTemplate.opsForHash().get(INTERFACE_PREFIX, id)).toString();
-        InterfaceInfo oldInterfaceInfo = JSONUtil.toBean(interfaceInfoJson, InterfaceInfo.class);
+        Object o = stringRedisTemplate.opsForHash().get(INTERFACE_PREFIX, String.valueOf(id));
+        InterfaceInfo oldInterfaceInfo = JSONUtil.toBean(JSONUtil.toJsonStr(o), InterfaceInfo.class);
         if (ObjectUtils.isEmpty(oldInterfaceInfo)) { // 如果为空则从数据库当中查找
             oldInterfaceInfo = getById(id);
         }
@@ -171,7 +173,7 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
         newInterfaceInfo.setId(id);
         newInterfaceInfo.setStatus(InterfaceStateInfoEnum.ONLINE.getValue());
         boolean result = updateById(newInterfaceInfo);
-        if (!ObjectUtil.isEmpty(stringRedisTemplate.opsForHash().get(INTERFACE_PREFIX, id))) {
+        if (!ObjectUtil.isEmpty(stringRedisTemplate.opsForHash().get(INTERFACE_PREFIX, String.valueOf(id)))) {
             // 再次查询如果存在，则删除 redis 中旧的缓存数据，只有当该条数据再次被调用时才将其缓存当 redis 当中
             stringRedisTemplate.opsForHash().delete(INTERFACE_PREFIX, id);
         }
@@ -185,8 +187,8 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         long id = idRequest.getId();
-        String interfaceInfoJson = Objects.requireNonNull(stringRedisTemplate.opsForHash().get(INTERFACE_PREFIX, id)).toString();
-        InterfaceInfo oldInterfaceInfo = JSONUtil.toBean(interfaceInfoJson, InterfaceInfo.class);
+        Object o = stringRedisTemplate.opsForHash().get(INTERFACE_PREFIX, id);
+        InterfaceInfo oldInterfaceInfo = JSONUtil.toBean(JSONUtil.toJsonStr(o), InterfaceInfo.class);
         if (Objects.isNull(oldInterfaceInfo)) {
             oldInterfaceInfo = getById(id);
             if (ObjectUtil.isEmpty(oldInterfaceInfo)) {
@@ -199,8 +201,8 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
         newInterfaceInfo.setStatus(InterfaceStateInfoEnum.OFFLINE.getValue());
         boolean result = updateById(newInterfaceInfo);
 
-        if (!Objects.isNull(stringRedisTemplate.opsForHash().get(INTERFACE_PREFIX, id))) {
-            stringRedisTemplate.delete(INTERFACE_PREFIX + id);
+        if (!Objects.isNull(stringRedisTemplate.opsForHash().get(INTERFACE_PREFIX, String.valueOf(id)))) {
+            stringRedisTemplate.opsForHash().delete(INTERFACE_PREFIX, String.valueOf(id));
         }
         return result;
     }
@@ -212,25 +214,29 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
         }
 
         long id = interfaceInfoInvokeRequest.getId();
-        StringBuilder userRequestParams = new StringBuilder(); // 防止trim报npe
+        StringBuilder requestParams = new StringBuilder(); // 防止trim报npe
         if (interfaceInfoInvokeRequest.getRequestParams() != null) {
-            userRequestParams = new StringBuilder(interfaceInfoInvokeRequest.getRequestParams().trim());
+            requestParams = new StringBuilder(interfaceInfoInvokeRequest.getRequestParams().trim());
         }
         String method = interfaceInfoInvokeRequest.getMethod();
         String url = interfaceInfoInvokeRequest.getUrl();
-        log.info("invoke...userRequestParams: {}", userRequestParams);
+        log.info("invoke...requestParams: {}", requestParams);
         log.info("invoke...method: {}", method);
         log.info("invoke...url: {}", url);
 
         // 判断接口是否存在，首先从缓存当中获取
-        String interfaceInfoJson = Objects.requireNonNull(stringRedisTemplate.opsForHash().get(INTERFACE_PREFIX, id)).toString();
-        InterfaceInfo oldInterfaceInfo = JSONUtil.toBean(interfaceInfoJson, InterfaceInfo.class);
-        if (ObjectUtil.isEmpty(oldInterfaceInfo)) oldInterfaceInfo = getById(id);
-        if (oldInterfaceInfo == null) {
-            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
+        Map<Object, Object> map = stringRedisTemplate.opsForHash().entries(INTERFACE_PREFIX);
+        InterfaceInfo o;
+        if (ObjectUtil.isEmpty(map) || ObjectUtils.isEmpty(o = (InterfaceInfo) map.get(id))) {
+            o = getById(id);
+            if (ObjectUtil.isNull(o)) {
+                throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
+            }
+            String interfaceJson = JSONUtil.toJsonStr(o);
+            stringRedisTemplate.opsForHash().put(INTERFACE_PREFIX, String.valueOf(id), interfaceJson);
         }
         // 判断接口是否已关闭
-        if (oldInterfaceInfo.getStatus() == 0) {
+        if (o.getStatus() == 0) {
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "接口已关闭");
         }
         // 判断请求方法、请求地址是否为空
@@ -239,6 +245,7 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
         }
         // 接口调用，首先获取当前用户，然后获得对应的通用标识符和秘钥
         User loginUser = userService.getLoginUser(request);
+        System.out.println(loginUser);
         String accessKey = loginUser.getAccessKey();
         String secretKey = loginUser.getSecretKey();
 
@@ -246,7 +253,7 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
         api.setInterfaceId(String.valueOf(id));
         api.setId(loginUser.getId());
         api.setAccount(loginUser.getAccount());
-        api.setBody(userRequestParams);
+        api.setBody(requestParams);
         api.setUrl(url);
         api.setMethod(method);
 
@@ -279,13 +286,17 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
         if (interfaceInfoQueryRequest != null) {
             BeanUtils.copyProperties(interfaceInfoQueryRequest, interfaceInfoQuery);
         }
-        // 先尝试通过 hashmap从缓存中获取，查询不到则从数据库当中查找
+        // 先尝试通过 hashmap 从缓存中获取，查询不到则从数据库当中查找
         List<Object> interfaceInfoLists = stringRedisTemplate.opsForHash().values(INTERFACE_PREFIX);
         if (!ObjectUtil.isEmpty(interfaceInfoLists)) {
             return interfaceInfoLists.stream().map(interfaceInfo -> (InterfaceInfo) interfaceInfo).collect(Collectors.toList());
         }
         QueryWrapper<InterfaceInfo> queryWrapper = new QueryWrapper<>(interfaceInfoQuery);
-        return list(queryWrapper);
+        List<InterfaceInfo> list = list(queryWrapper);
+        Map<String, String> map = new HashMap<>();
+        list.forEach(info -> map.put(info.getId().toString(), JSONUtil.toJsonStr(info)));
+        stringRedisTemplate.opsForHash().putAll(INTERFACE_PREFIX, map);
+        return list;
     }
 
     @Override
