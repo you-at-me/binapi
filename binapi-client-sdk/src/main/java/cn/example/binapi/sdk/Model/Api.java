@@ -7,6 +7,8 @@ import lombok.NoArgsConstructor;
 import java.io.Serializable;
 
 /**
+ * 远程调用接口实体类
+ *
  * @author Carl
  * @since 2023-05-17
  */
