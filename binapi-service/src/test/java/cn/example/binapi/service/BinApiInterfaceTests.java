@@ -67,28 +67,28 @@ public class BinApiInterfaceTests {
         String userPassword = "";
         String checkPassword = "123456";
         try {
-            long result = userService.userRegister(userAccount, userPassword, checkPassword);
+            long result = userService.userRegister(userAccount, userPassword, checkPassword, null);
             Assertions.assertEquals(-1, result);
-            userAccount = "yu";
-            result = userService.userRegister(userAccount, userPassword, checkPassword);
+            userAccount = "zyshu";
+            result = userService.userRegister(userAccount, userPassword, checkPassword, null);
             Assertions.assertEquals(-1, result);
             userAccount = "Carl";
             userPassword = "123456";
-            result = userService.userRegister(userAccount, userPassword, checkPassword);
+            result = userService.userRegister(userAccount, userPassword, checkPassword, null);
             Assertions.assertEquals(-1, result);
-            userAccount = "yu pi";
+            userAccount = "zyshu";
             userPassword = "12345678";
-            result = userService.userRegister(userAccount, userPassword, checkPassword);
+            result = userService.userRegister(userAccount, userPassword, checkPassword, null);
             Assertions.assertEquals(-1, result);
             checkPassword = "123456789";
-            result = userService.userRegister(userAccount, userPassword, checkPassword);
+            result = userService.userRegister(userAccount, userPassword, checkPassword, null);
             Assertions.assertEquals(-1, result);
-            userAccount = "dogCarl";
+            userAccount = "zyshu";
             checkPassword = "12345678";
-            result = userService.userRegister(userAccount, userPassword, checkPassword);
+            result = userService.userRegister(userAccount, userPassword, checkPassword, null);
             Assertions.assertEquals(-1, result);
             userAccount = "Carl";
-            result = userService.userRegister(userAccount, userPassword, checkPassword);
+            result = userService.userRegister(userAccount, userPassword, checkPassword, null);
             Assertions.assertEquals(-1, result);
         } catch (Exception e) {
             e.printStackTrace();

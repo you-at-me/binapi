@@ -44,15 +44,16 @@ public class UserController {
         if (ObjectUtil.isNull(userRegisterRequest)) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        String userAccount = userRegisterRequest.getAccount();
-        String userPassword = userRegisterRequest.getPassword();
+        String account = userRegisterRequest.getAccount();
+        String password = userRegisterRequest.getPassword();
         String checkPassword = userRegisterRequest.getCheckPassword();
-        if (StringUtils.isAnyBlank(userAccount, userPassword, checkPassword)) {
+        String phoneOrMail = userRegisterRequest.getPhoneOrMail();
+        if (StringUtils.isAnyBlank(account, password, checkPassword)) {
             return ResultUtils.error(ErrorCode.PARAMS_ERROR);
         }
         // 成功返回用户ID
-        long result = userService.userRegister(userAccount, userPassword, checkPassword);
-        return ResultUtils.success(result);
+        long id = userService.userRegister(account, password, checkPassword, phoneOrMail);
+        return ResultUtils.success(id);
     }
 
     /**
