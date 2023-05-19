@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 public enum InterfaceStateInfoEnum {
 
     ONLINE("接口上线", 1),
-    OFFLINE("接口下线", 1);
+    OFFLINE("接口下线", 0);
 
     private final String text;
 

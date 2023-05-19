@@ -8,7 +8,7 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
- * 用户调用接口关系
+ * 用户接口关系表
  * @TableName user_interface_info
  */
 @Data
@@ -29,12 +29,14 @@ public class UserInterfaceInfo implements Serializable {
     private Long interfaceInfoId;
 
     /**
-     * 总调用次数
+     * 总调用次数: 调用次数只是
+     * 给那些未登录的用户使用的
      */
     private Integer totalNum;
 
     /**
-     * 剩余调用次数
+     * 剩余调用次数：调用次数只是
+     * 给那些未登录的用户使用的
      */
     private Integer leftNum;
 
