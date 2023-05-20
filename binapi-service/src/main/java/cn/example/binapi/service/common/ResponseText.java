@@ -16,7 +16,11 @@ public enum ResponseText {
     NOT_FOUND( "请求数据不存在"),
     FORBIDDEN("禁止访问"),
     SYSTEM_ERROR("系统内部异常"),
-    OPERATION_ERROR( "操作失败");
+    OPERATION_ERROR( "操作失败"),
+
+
+    INTERFACE_EMPTY("接口不存在"),
+    INTERFACE_NOT_FULL("接口调用次数不足");
 
 
     /**
