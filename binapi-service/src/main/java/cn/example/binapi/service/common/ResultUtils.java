@@ -9,20 +9,20 @@ public class ResultUtils {
      * 成功
      */
     public static <T> BaseResponse<T> success(T data) {
-        return new BaseResponse<>(ErrorCode.SUCCESS.getCode(), data, ErrorCode.SUCCESS.getMessage());
+        return new BaseResponse<>(ResponseStatus.SUCCESS.getCode(), data, ResponseStatus.SUCCESS.getMessage());
     }
 
     /**
      * 失败
      */
     public static <T> BaseResponse<T> error() {
-        return new BaseResponse<>(ErrorCode.FORBIDDEN_ERROR.getCode(), null, ErrorCode.FORBIDDEN_ERROR.getMessage());
+        return new BaseResponse<>(ResponseStatus.FORBIDDEN.getCode(), null, ResponseStatus.FORBIDDEN.getMessage());
     }
 
     /**
      * 失败
      */
-    public static <T> BaseResponse<T> error(ErrorCode errorCode) {
+    public static <T> BaseResponse<T> error(ResponseStatus errorCode) {
         return new BaseResponse<>(errorCode);
     }
 
@@ -36,7 +36,7 @@ public class ResultUtils {
     /**
      * 失败
      */
-    public static <T> BaseResponse<T> error(ErrorCode errorCode, String message) {
+    public static <T> BaseResponse<T> error(ResponseStatus errorCode, String message) {
         return new BaseResponse<>(errorCode.getCode(), null, message);
     }
 }
