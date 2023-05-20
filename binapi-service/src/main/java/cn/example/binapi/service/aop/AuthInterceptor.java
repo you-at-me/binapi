@@ -2,7 +2,7 @@ package cn.example.binapi.service.aop;
 
 import cn.example.binapi.common.model.entity.User;
 import cn.example.binapi.service.annotation.AuthCheck;
-import cn.example.binapi.service.common.ErrorCode;
+import cn.example.binapi.service.common.ResponseStatus;
 import cn.example.binapi.service.exception.BusinessException;
 import cn.example.binapi.service.service.UserService;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
@@ -44,9 +44,9 @@ public class AuthInterceptor {
         HttpServletRequest request = ((ServletRequestAttributes) requestAttributes).getRequest();
         // 当前登录用户
         User user = userService.getLoginUser(request);
-        if (Objects.isNull(user)) throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
+        if (Objects.isNull(user)) throw new BusinessException(ResponseStatus.NO_AUTH);
         // if (CollectionUtils.isNotEmpty(anyRole) || StringUtils.isNotBlank(mustRole)) {
-        //     throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
+        //     throw new BusinessException(ResponseStatus.NO_AUTH);
         // }
 
         // 执行到这里表示用户具有身份，可以访问对应接口
@@ -54,14 +54,14 @@ public class AuthInterceptor {
         if (CollectionUtils.isNotEmpty(anyRole)) {
             String userRole = user.getRole();
             if (!anyRole.contains(userRole)) { // 判断当前用户是否包含在任意角色里
-                throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
+                throw new BusinessException(ResponseStatus.NO_AUTH);
             }
         }
         // 某个必需角色必须得是当前请求用户对应的用户角色才能通过
         if (StringUtils.isNotBlank(mustRole)) {
             String userRole = user.getRole();
             if (!mustRole.equals(userRole)) {
-                throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
+                throw new BusinessException(ResponseStatus.NO_AUTH);
             }
         }
         // 通过权限校验，放行，调用 proceed 方法表示获得被增强方法的返回值，point 表示正在执行的连接点，即切点
