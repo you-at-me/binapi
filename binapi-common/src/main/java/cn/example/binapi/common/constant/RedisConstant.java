@@ -9,11 +9,11 @@ public interface RedisConstant {
 
     String USER_PREFIX = "user_";
 
-    String REGISTER_EMAIL_PREFIX = "binapi:registerEmail:";
+    String REGISTER_EMAIL_PREFIX = "binapi:register_email:";
 
     String GITHUB_STARS_PREFIX = "githubStars_";
 
     String INTERFACE_PREFIX = "binapi:interface_info";
 
-    String USER_INTERFACE_PREFIX = "userInterface_";
+    String USER_INTERFACE_PREFIX = "binapi:user_interface";
 }
