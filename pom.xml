@@ -21,11 +21,14 @@
         <module>binapi-service</module>
         <module>binapi-interfaces</module>
         <module>binapi-common</module>
+        <module>binapi-gateway</module>
     </modules>
 
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
+        <spring-cloud.version>Hoxton.SR8</spring-cloud.version>
+        <spring-cloud-alibaba.version>2.2.5.RELEASE</spring-cloud-alibaba.version>
         <hutool-version>5.7.22</hutool-version>
         <mysql-version>8.0.25</mysql-version>
         <mybatis-spring-version>2.3.0</mybatis-spring-version>
@@ -35,6 +38,22 @@
 
     <dependencyManagement>
         <dependencies>
+            <!-- 配置springcloud版本组件依赖 -->
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <!-- nacos父工程管理依赖 -->
+            <dependency>
+                <groupId>com.alibaba.cloud</groupId>
+                <artifactId>spring-cloud-alibaba-dependencies</artifactId>
+                <version>${spring-cloud-alibaba.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
             <!-- 管理自定义开发的 starter 包，可以远程调用的 SDK -->
             <dependency>
                 <groupId>cn.example.binapi</groupId>
