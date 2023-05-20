@@ -44,7 +44,7 @@ mybatis-plus:
       logic-delete-value: 1 # 逻辑已删除值(默认为 1)
       logic-not-delete-value: 0 # 逻辑未删除值(默认为 0)
       table-prefix: tb_
-      id-type: auto
+      id-type: assign_id
 # 导入 starter 包自定义配置
 alias:
   openapi:
