@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>binapi-root</artifactId>
+        <groupId>cn.example.binapi</groupId>
+        <version>1.0</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>binapi-gateway</artifactId>
+
+    <properties>
+        <maven.compiler.source>8</maven.compiler.source>
+        <maven.compiler.target>8</maven.compiler.target>
+    </properties>
+
+
+    <dependencies>
+        <!-- 引入自定义开发的 starter 包，可以远程调用的 SDK -->
+        <dependency>
+            <groupId>cn.example.binapi</groupId>
+            <artifactId>binapi-client-sdk</artifactId>
+        </dependency>
+        <!-- 引入自定义公共模块 -->
+        <dependency>
+            <groupId>cn.example.binapi</groupId>
+            <artifactId>binapi-common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-gateway</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-webmvc</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.dubbo</groupId>
+            <artifactId>dubbo</artifactId>
+            <version>3.0.9</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.alibaba</groupId>
+                    <artifactId>fastjson</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.dubbo</groupId>
+            <artifactId>dubbo-spring-boot-starter</artifactId>
+            <version>3.0.9</version>
+        </dependency>
+
+        <!-- <dependency> -->
+        <!--     <groupId>com.alibaba.nacos</groupId> -->
+        <!--     <artifactId>nacos-client</artifactId> -->
+        <!--     <version>2.1.0</version> -->
+        <!-- </dependency> -->
+
+        <!-- <dependency> -->
+        <!--     <groupId>com.alibaba.cloud</groupId> -->
+        <!--     <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId> -->
+        <!--     <version>2.2.9.RELEASE</version> -->
+        <!-- </dependency> -->
+
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+
+    <build>
+        <!-- 指定最后打成jar包的名称 -->
+        <finalName>binapi-gateway</finalName>
+        <plugins>
+            <!-- 插件配置 -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <!-- layout标签表示maven打包之后存档的类型（对应于依赖项在其中的布局方式）可取的值为 JAR、WAR、ZIP、DIR、NONE，默认为基于存档类型的猜测。NONE值表示让maven不打该模块所依赖别的模块的可执行jar，这个可执行jar就是该模块所依赖于另一个模块打的可执行jar包，一般NONE值也就应用于普通maven工程下打包，而对于一些springboot工程则需要使用其他值。但是需要注意的是如果该普通maven工程需要依赖别的普通maven工程下的类时，这个时候就不能配置NONE值，需要配置其他的值。-->
+                    <layout>ZIP</layout>
+                    <!-- 主程序入口，一般配置在springboot项目中 -->
+                    <mainClass>cn.example.gateway.GateWayServiceApplication</mainClass>
+                    <excludes>
+                        <exclude>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </exclude>
+                    </excludes>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <!-- 可以把依赖的包都打包到生成的Jar包中 -->
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
