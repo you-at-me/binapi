@@ -5,7 +5,7 @@ import cn.example.binapi.common.model.entity.User;
 import cn.example.binapi.common.model.vo.UserVO;
 import cn.example.binapi.service.annotation.AuthCheck;
 import cn.example.binapi.service.common.BaseResponse;
-import cn.example.binapi.service.common.ErrorCode;
+import cn.example.binapi.service.common.ResponseStatus;
 import cn.example.binapi.service.common.ResultUtils;
 import cn.example.binapi.service.exception.BusinessException;
 import cn.example.binapi.service.service.UserService;
@@ -42,14 +42,14 @@ public class UserController {
     @PostMapping("register")
     public BaseResponse<Long> userRegister(@RequestBody UserRegisterRequest userRegisterRequest) {
         if (ObjectUtil.isNull(userRegisterRequest)) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+            throw new BusinessException(ResponseStatus.PARAMS_ERROR);
         }
         String account = userRegisterRequest.getAccount();
         String password = userRegisterRequest.getPassword();
         String checkPassword = userRegisterRequest.getCheckPassword();
         String phoneOrMail = userRegisterRequest.getPhoneOrMail();
         if (StringUtils.isAnyBlank(account, password, checkPassword)) {
-            return ResultUtils.error(ErrorCode.PARAMS_ERROR);
+            return ResultUtils.error(ResponseStatus.PARAMS_ERROR);
         }
         // 成功返回用户ID
         long id = userService.userRegister(account, password, checkPassword, phoneOrMail);
@@ -62,12 +62,12 @@ public class UserController {
     @PostMapping("login")
     public BaseResponse<User> userLogin(@RequestBody UserLoginRequest userLoginRequest, HttpServletRequest request) {
         if (Objects.isNull(userLoginRequest)) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+            throw new BusinessException(ResponseStatus.PARAMS_ERROR);
         }
         String userAccount = userLoginRequest.getAccount();
         String userPassword = userLoginRequest.getPassword();
         if (StringUtils.isAnyBlank(userAccount, userPassword)) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+            throw new BusinessException(ResponseStatus.PARAMS_ERROR);
         }
         User user = userService.userLogin(userAccount, userPassword, request);
         return ResultUtils.success(user);
@@ -79,7 +79,7 @@ public class UserController {
     @PostMapping("logout")
     public BaseResponse<Boolean> userLogout(HttpServletRequest request) {
         if (request == null) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+            throw new BusinessException(ResponseStatus.PARAMS_ERROR);
         }
         boolean result = userService.userLogout(request);
         return ResultUtils.success(result);
@@ -107,13 +107,13 @@ public class UserController {
     @AuthCheck(mustRole = "admin") // 只有管理员才能创建用户
     public BaseResponse<Long> addUser(@RequestBody UserAddRequest userAddRequest) {
         if (ObjectUtils.isEmpty(userAddRequest)) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+            throw new BusinessException(ResponseStatus.PARAMS_ERROR);
         }
         User user = new User();
         BeanUtils.copyProperties(userAddRequest, user);
         boolean result = userService.save(user);
         if (!result) {
-            throw new BusinessException(ErrorCode.OPERATION_ERROR);
+            throw new BusinessException(ResponseStatus.OPERATION_ERROR);
         }
         return ResultUtils.success(user.getId());
     }
@@ -124,7 +124,7 @@ public class UserController {
     @PostMapping("/delete/{id}")
     public BaseResponse<Boolean> deleteUser(@PathVariable("id") long id) {
         if (ObjectUtils.isEmpty(id) || id <= 0) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+            throw new BusinessException(ResponseStatus.PARAMS_ERROR);
         }
         boolean b = userService.removeById(id);
         return ResultUtils.success(b);
@@ -136,7 +136,7 @@ public class UserController {
     @PostMapping("update")
     public BaseResponse<Boolean> updateUser(@RequestBody UserUpdateRequest userUpdateRequest) {
         if (userUpdateRequest == null || userUpdateRequest.getId() == null) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+            throw new BusinessException(ResponseStatus.PARAMS_ERROR);
         }
         User user = new User();
         BeanUtils.copyProperties(userUpdateRequest, user);
@@ -150,7 +150,7 @@ public class UserController {
     @GetMapping("/get/{id}")
     public BaseResponse<UserVO> getUserById(@PathVariable("id") long id) {
         if (ObjectUtil.isEmpty(id) || id <= 0) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+            throw new BusinessException(ResponseStatus.PARAMS_ERROR);
         }
         User user = userService.getById(id);
         UserVO userVO = new UserVO();

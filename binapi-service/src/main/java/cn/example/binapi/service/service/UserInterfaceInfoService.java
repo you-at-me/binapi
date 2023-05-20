@@ -7,13 +7,12 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 /**
- * 用户调用接口信息表的接口服务
+ * 用户操作接口关系表的接口服务，用户接口关系表供管理员查看的
  */
 public interface UserInterfaceInfoService extends IService<UserInterfaceInfo> {
 
     /**
-     * 初始化接口免费调用次数
-     */
+     * 初始化接口免费调用次数     */
     void addUserInterfaceInfo();
 
     void validUserInterfaceInfo(UserInterfaceInfo userInterfaceInfo, boolean add);

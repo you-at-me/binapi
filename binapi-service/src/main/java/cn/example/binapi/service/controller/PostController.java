@@ -4,7 +4,7 @@ import cn.example.binapi.common.model.entity.User;
 import cn.example.binapi.service.annotation.AuthCheck;
 import cn.example.binapi.service.common.BaseResponse;
 import cn.example.binapi.common.common.UserDeleteRequest;
-import cn.example.binapi.service.common.ErrorCode;
+import cn.example.binapi.service.common.ResponseStatus;
 import cn.example.binapi.service.common.ResultUtils;
 import cn.example.binapi.common.constant.CommonConstant;
 import cn.example.binapi.service.exception.BusinessException;
@@ -47,7 +47,7 @@ public class PostController {
     @PostMapping("/add")
     public BaseResponse<Long> addPost(@RequestBody PostAddRequest postAddRequest, HttpServletRequest request) {
         if (postAddRequest == null) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+            throw new BusinessException(ResponseStatus.PARAMS_ERROR);
         }
         Post post = new Post();
         BeanUtils.copyProperties(postAddRequest, post);
@@ -57,7 +57,7 @@ public class PostController {
         post.setUserId(loginUser.getId());
         boolean result = postService.save(post);
         if (!result) {
-            throw new BusinessException(ErrorCode.OPERATION_ERROR);
+            throw new BusinessException(ResponseStatus.OPERATION_ERROR);
         }
         long newPostId = post.getId();
         return ResultUtils.success(newPostId);
@@ -69,18 +69,18 @@ public class PostController {
     @PostMapping("/delete/{id}")
     public BaseResponse<Boolean> deletePost(@RequestBody UserDeleteRequest deleteRequest, HttpServletRequest request) {
         if (deleteRequest == null || deleteRequest.getId() <= 0) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+            throw new BusinessException(ResponseStatus.PARAMS_ERROR);
         }
         User user = userService.getLoginUser(request);
         long id = deleteRequest.getId();
         // 判断是否存在
         Post oldPost = postService.getById(id);
         if (oldPost == null) {
-            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
+            throw new BusinessException(ResponseStatus.NOT_FOUND);
         }
         // 仅本人或管理员可删除
         if (!oldPost.getUserId().equals(user.getId()) && userService.isNotAdmin(request)) {
-            throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
+            throw new BusinessException(ResponseStatus.NO_AUTH);
         }
         boolean b = postService.removeById(id);
         return ResultUtils.success(b);
@@ -93,7 +93,7 @@ public class PostController {
     public BaseResponse<Boolean> updatePost(@RequestBody PostUpdateRequest postUpdateRequest,
                                             HttpServletRequest request) {
         if (postUpdateRequest == null || postUpdateRequest.getId() <= 0) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+            throw new BusinessException(ResponseStatus.PARAMS_ERROR);
         }
         Post post = new Post();
         BeanUtils.copyProperties(postUpdateRequest, post);
@@ -104,11 +104,11 @@ public class PostController {
         // 判断是否存在
         Post oldPost = postService.getById(id);
         if (oldPost == null) {
-            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
+            throw new BusinessException(ResponseStatus.NOT_FOUND);
         }
         // 仅本人或管理员可修改
         if (!oldPost.getUserId().equals(user.getId()) && userService.isNotAdmin(request)) {
-            throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
+            throw new BusinessException(ResponseStatus.NO_AUTH);
         }
         boolean result = postService.updateById(post);
         return ResultUtils.success(result);
@@ -120,7 +120,7 @@ public class PostController {
     @GetMapping("/get")
     public BaseResponse<Post> getPostById(long id) {
         if (id <= 0) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+            throw new BusinessException(ResponseStatus.PARAMS_ERROR);
         }
         Post post = postService.getById(id);
         return ResultUtils.success(post);
@@ -147,7 +147,7 @@ public class PostController {
     @GetMapping("/list/page")
     public BaseResponse<Page<Post>> listPostByPage(PostQueryRequest postQueryRequest, HttpServletRequest request) {
         if (postQueryRequest == null) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+            throw new BusinessException(ResponseStatus.PARAMS_ERROR);
         }
         Post postQuery = new Post();
         BeanUtils.copyProperties(postQueryRequest, postQuery);
@@ -160,7 +160,7 @@ public class PostController {
         postQuery.setContent(null);
         // 限制爬虫
         if (size > 50) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+            throw new BusinessException(ResponseStatus.PARAMS_ERROR);
         }
         QueryWrapper<Post> queryWrapper = new QueryWrapper<>(postQuery);
         queryWrapper.like(StringUtils.isNotBlank(content), "content", content);

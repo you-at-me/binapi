@@ -2,7 +2,7 @@
 //
 // import cn.alias.openapi.common.model.entity.User;
 // import cn.alias.openapi.common.service.InnerUserService;
-// import cn.alias.openapi.service.common.ErrorCode;
+// import cn.alias.openapi.service.common.ResponseStatus;
 // import cn.alias.openapi.service.exception.BusinessException;
 // import cn.alias.openapi.service.mapper.UserMapper;
 // import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -20,7 +20,7 @@
 //     @Override
 //     public User getInvokeUser(String accessKey) {
 //         if (StringUtils.isAnyBlank(accessKey)) {
-//             throw new BusinessException(ErrorCode.PARAMS_ERROR);
+//             throw new BusinessException(ResponseStatus.PARAMS_ERROR);
 //         }
 //         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
 //         queryWrapper.eq("access_key", accessKey);

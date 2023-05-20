@@ -45,4 +45,9 @@ public interface UserService extends IService<User> {
      * 用户注销
      */
     boolean userLogout(HttpServletRequest request);
+
+    /**
+     * 获取github+gitee star数
+     */
+    Integer getStars();
 }

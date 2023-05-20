@@ -3,7 +3,7 @@
 // import cn.alias.openapi.common.model.entity.InterfaceInfo;
 // import cn.alias.openapi.common.model.entity.UserInterfaceInfo;
 // import cn.alias.openapi.common.service.InnerInterfaceInfoService;
-// import cn.alias.openapi.service.common.ErrorCode;
+// import cn.alias.openapi.service.common.ResponseStatus;
 // import cn.alias.openapi.service.exception.BusinessException;
 // import cn.alias.openapi.service.mapper.InterfaceInfoMapper;
 // import cn.alias.openapi.service.service.UserInterfaceInfoService;
@@ -28,7 +28,7 @@
 //     @Override
 //     public InterfaceInfo getInterfaceInfo(String url, String method) {
 //         if (StringUtils.isAnyBlank(url, method)) {
-//             throw new BusinessException(ErrorCode.PARAMS_ERROR);
+//             throw new BusinessException(ResponseStatus.PARAMS_ERROR);
 //         }
 //         log.info("url: {}", url);
 //         URI uri = URI.create(url);
@@ -43,7 +43,7 @@
 //     @Override
 //     public boolean hasCount(Long interfaceId, Long userId) {
 //         if (interfaceId <= 0 || userId <= 0) {
-//             throw new BusinessException(ErrorCode.PARAMS_ERROR);
+//             throw new BusinessException(ResponseStatus.PARAMS_ERROR);
 //         }
 //
 //         UserInterfaceInfo userInterfaceInfo = userInterfaceInfoService.getOne(new QueryWrapper<UserInterfaceInfo>()

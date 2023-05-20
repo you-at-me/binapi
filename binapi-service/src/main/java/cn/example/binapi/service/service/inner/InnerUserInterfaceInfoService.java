@@ -1,7 +1,7 @@
 package cn.example.binapi.service.service.inner;
 
 /**
- * 用户调用接口信息表的接口服务
+ * 用户操作接口关系表的内部接口服务，用户接口关系表供管理员查看的
  */
 public interface InnerUserInterfaceInfoService {
 

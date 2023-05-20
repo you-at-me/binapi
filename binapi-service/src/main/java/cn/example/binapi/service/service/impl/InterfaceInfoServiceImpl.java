@@ -13,7 +13,7 @@ import cn.example.binapi.common.model.enums.InterfaceStateInfoEnum;
 import cn.example.binapi.common.model.vo.InterfaceInfoVO;
 import cn.example.binapi.sdk.Model.Api;
 import cn.example.binapi.sdk.client.RemoteCallClient;
-import cn.example.binapi.service.common.ErrorCode;
+import cn.example.binapi.service.common.ResponseStatus;
 import cn.example.binapi.service.exception.BusinessException;
 import cn.example.binapi.service.mapper.InterfaceInfoMapper;
 import cn.example.binapi.service.service.InterfaceInfoService;
@@ -66,23 +66,23 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
     @Override
     public void validInterfaceInfo(InterfaceInfo interfaceInfo, boolean b) {
         if (ObjectUtil.isEmpty(interfaceInfo)) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+            throw new BusinessException(ResponseStatus.PARAMS_ERROR);
         }
         String name = interfaceInfo.getName();
         if (b) {
             if (StringUtils.isAnyBlank(name)) {
-                throw new BusinessException(ErrorCode.PARAMS_ERROR);
+                throw new BusinessException(ResponseStatus.PARAMS_ERROR);
             }
         }
         if (StringUtils.isNotBlank(name) && name.length() > 50) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "名称过长");
+            throw new BusinessException(ResponseStatus.PARAMS_ERROR, "名称过长");
         }
     }
 
     @Override
     public long addInterfaceInfo(InterfaceInfoAddRequest interfaceInfoAddRequest, HttpServletRequest request) {
         if (Objects.isNull(interfaceInfoAddRequest)) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+            throw new BusinessException(ResponseStatus.PARAMS_ERROR);
         }
         InterfaceInfo interfaceInfo = new InterfaceInfo();
         BeanUtils.copyProperties(interfaceInfoAddRequest, interfaceInfo);
@@ -94,7 +94,7 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
         // 将接口信息保存在数据库当中，等接口被调用的时候再将接口信息数据缓存到 redis 当中
         boolean result = save(interfaceInfo);
         if (!result) {
-            throw new BusinessException(ErrorCode.OPERATION_ERROR);
+            throw new BusinessException(ResponseStatus.OPERATION_ERROR);
         }
         // 新增成功直接返回接口的ID
         return interfaceInfo.getId();
@@ -103,17 +103,17 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
     @Override
     public boolean deleteInterfaceInfo(long id, HttpServletRequest request) {
         if (ObjectUtil.isEmpty(id) || id <= 0) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+            throw new BusinessException(ResponseStatus.PARAMS_ERROR);
         }
         User user = userService.getLoginUser(request);
         // 判断是否存在
         InterfaceInfo oldInterfaceInfo = getById(id);
         if (ObjectUtils.isEmpty(oldInterfaceInfo)) {
-            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
+            throw new BusinessException(ResponseStatus.NOT_FOUND);
         }
         // 仅本人或管理员可删除
         if (!oldInterfaceInfo.getCreator().equals(user.getId()) && userService.isNotAdmin(request)) {
-            throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
+            throw new BusinessException(ResponseStatus.NO_AUTH);
         }
         // 先删除数据库再删除缓存
         boolean isRemove = removeById(id);
@@ -127,7 +127,7 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
     @Override
     public boolean updateInterfaceInfo(InterfaceInfoUpdateRequest interfaceInfoUpdateRequest, HttpServletRequest request) {
         if (interfaceInfoUpdateRequest == null || interfaceInfoUpdateRequest.getId() <= 0) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+            throw new BusinessException(ResponseStatus.PARAMS_ERROR);
         }
         InterfaceInfo interfaceInfo = new InterfaceInfo();
         BeanUtils.copyProperties(interfaceInfoUpdateRequest, interfaceInfo);
@@ -138,11 +138,11 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
         // 判断是否存在
         InterfaceInfo oldInterfaceInfo = getById(id);
         if (oldInterfaceInfo == null) {
-            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
+            throw new BusinessException(ResponseStatus.NOT_FOUND);
         }
         // 仅本人或管理员可修改，更新操作不用更新缓存，只有接口被调用的时候再去构建缓存
         if (!oldInterfaceInfo.getCreator().equals(user.getId()) && userService.isNotAdmin(request)) {
-            throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
+            throw new BusinessException(ResponseStatus.NO_AUTH);
         }
         return updateById(interfaceInfo);
     }
@@ -150,23 +150,22 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
     @Override
     public Boolean onlineInterfaceInfo(InterfaceInfoInvokeRequest idRequest, HttpServletRequest request) {
         if (ObjectUtil.isNull(idRequest) || idRequest.getId() <= 0) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+            throw new BusinessException(ResponseStatus.PARAMS_ERROR);
         }
         // 判断接口是否存在
         long id = idRequest.getId();
-        log.info("id: {}", id);
         Object o = stringRedisTemplate.opsForHash().get(INTERFACE_PREFIX, String.valueOf(id));
         InterfaceInfo oldInterfaceInfo = JSONUtil.toBean(JSONUtil.toJsonStr(o), InterfaceInfo.class);
         if (ObjectUtils.isEmpty(oldInterfaceInfo)) { // 如果为空则从数据库当中查找
             oldInterfaceInfo = getById(id);
         }
         if (Objects.isNull(oldInterfaceInfo)) {
-            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
+            throw new BusinessException(ResponseStatus.NOT_FOUND);
         }
         // 验证接口是否可以调用，修改为远程调用
         String res = invokeInterface(idRequest, request);
         if (StrUtil.isBlank(res)) {
-            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "接口验证失败");
+            throw new BusinessException(ResponseStatus.SYSTEM_ERROR, "接口验证失败");
         }
         // 更新状态，进行发布，也就是将状态置为 1 , 仅本人或者管理员才可修改
         InterfaceInfo newInterfaceInfo = new InterfaceInfo();
@@ -185,7 +184,7 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
     public Boolean offlineInterfaceInfo(InterfaceIdRequest idRequest) {
 
         if (Objects.isNull(idRequest) || idRequest.getId() == 0) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+            throw new BusinessException(ResponseStatus.PARAMS_ERROR);
         }
         long id = idRequest.getId();
         Object o = stringRedisTemplate.opsForHash().get(INTERFACE_PREFIX, id);
@@ -193,7 +192,7 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
         if (Objects.isNull(oldInterfaceInfo)) {
             oldInterfaceInfo = getById(id);
             if (ObjectUtil.isEmpty(oldInterfaceInfo)) {
-                throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
+                throw new BusinessException(ResponseStatus.NOT_FOUND);
             }
         }
         // 更新接口状态
@@ -211,7 +210,7 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
     @Override
     public String invokeInterface(InterfaceInfoInvokeRequest interfaceInfoInvokeRequest, HttpServletRequest request) {
         if (interfaceInfoInvokeRequest == null || interfaceInfoInvokeRequest.getId() == 0) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+            throw new BusinessException(ResponseStatus.PARAMS_ERROR);
         }
         long id = interfaceInfoInvokeRequest.getId();
         StringBuilder requestParams = new StringBuilder(); // 防止trim报npe
@@ -229,16 +228,16 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
         if (ObjectUtil.isEmpty(map) || ObjectUtils.isEmpty(o = (InterfaceInfo) map.get(id))) {
             o = getById(id);
             if (ObjectUtil.isNull(o)) {
-                throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
+                throw new BusinessException(ResponseStatus.NOT_FOUND);
             }
             String interfaceJson = JSONUtil.toJsonStr(o);
             stringRedisTemplate.opsForHash().put(INTERFACE_PREFIX, String.valueOf(id), interfaceJson);
         }
         if (o.getStatus() == InterfaceStateInfoEnum.OFFLINE.getValue()) {
-            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "接口已关闭");
+            throw new BusinessException(ResponseStatus.SYSTEM_ERROR, "接口已关闭");
         }
         if (StringUtils.isAnyBlank(method, url)) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+            throw new BusinessException(ResponseStatus.PARAMS_ERROR);
         }
         User loginUser = userService.getLoginUser(request);//接口调用，首先获取当前用户
         System.out.println(loginUser);
@@ -266,11 +265,11 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
     @Override
     public InterfaceInfo getInterfaceInfoById(long id, HttpServletRequest request) {
         if (ObjectUtil.isEmpty(id)) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+            throw new BusinessException(ResponseStatus.PARAMS_ERROR);
         }
         InterfaceInfo interfaceInfo = getById(id);
         if (interfaceInfo == null || interfaceInfo.getId() == null || interfaceInfo.getId() <= 0) {
-            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
+            throw new BusinessException(ResponseStatus.NOT_FOUND);
         }
         User user = userService.getLoginUser(request);
         QueryWrapper<UserInterfaceInfo> queryWrapper = new QueryWrapper<>();
@@ -303,7 +302,7 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
     @Override
     public Page<InterfaceInfo> interfaceInfoService(InterfaceInfoQueryRequest interfaceInfoQueryRequest) {
         if (interfaceInfoQueryRequest == null) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+            throw new BusinessException(ResponseStatus.PARAMS_ERROR);
         }
         InterfaceInfo interfaceInfoQuery = new InterfaceInfo();
         BeanUtils.copyProperties(interfaceInfoQueryRequest, interfaceInfoQuery);
@@ -316,7 +315,7 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
         interfaceInfoQuery.setDescription(null);
         // 限制爬虫
         if (size > 50) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+            throw new BusinessException(ResponseStatus.PARAMS_ERROR);
         }
         QueryWrapper<InterfaceInfo> queryWrapper = new QueryWrapper<>(interfaceInfoQuery);
         queryWrapper.like(StringUtils.isNotBlank(description), "description", description);

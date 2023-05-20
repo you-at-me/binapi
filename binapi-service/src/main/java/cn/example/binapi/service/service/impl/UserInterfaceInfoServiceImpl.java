@@ -4,7 +4,7 @@ package cn.example.binapi.service.service.impl;
 import cn.example.binapi.common.model.entity.InterfaceInfo;
 import cn.example.binapi.common.model.entity.User;
 import cn.example.binapi.common.model.entity.UserInterfaceInfo;
-import cn.example.binapi.service.common.ErrorCode;
+import cn.example.binapi.service.common.ResponseStatus;
 import cn.example.binapi.common.common.PageRequest;
 import cn.example.binapi.service.exception.BusinessException;
 import cn.example.binapi.service.mapper.InterfaceInfoMapper;
@@ -27,7 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 用户调用接口信息表的服务实现类
+ * 用户操作接口关系表的服务实现类，用户接口关系表供管理员查看的
  */
 @Service
 @Slf4j
@@ -141,12 +141,12 @@ public class UserInterfaceInfoServiceImpl extends ServiceImpl<UserInterfaceInfoM
     @Override
     public void validUserInterfaceInfo(UserInterfaceInfo userInterfaceInfo, boolean add) {
         if (userInterfaceInfo == null) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+            throw new BusinessException(ResponseStatus.PARAMS_ERROR);
         }
         // 创建时，所有参数必须非空
         if (add) {
             if (userInterfaceInfo.getInterfaceInfoId() <= 0 || userInterfaceInfo.getCreator() <= 0) {
-                throw new BusinessException(ErrorCode.PARAMS_ERROR, "接口或用户不存在");
+                throw new BusinessException(ResponseStatus.PARAMS_ERROR, "接口或用户不存在");
             }
         }
 
@@ -156,7 +156,7 @@ public class UserInterfaceInfoServiceImpl extends ServiceImpl<UserInterfaceInfoM
         UserInterfaceInfo one = this.getOne(queryWrapper);
 
         if (userInterfaceInfo.getLeftNum() <= 0) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "调用次数不足");
+            throw new BusinessException(ResponseStatus.PARAMS_ERROR, "调用次数不足");
         }
     }
 
@@ -170,7 +170,7 @@ public class UserInterfaceInfoServiceImpl extends ServiceImpl<UserInterfaceInfoM
     public boolean invokeCount(long interfaceInfoId, long userId) {
         // 判断参数是否合法
         if (interfaceInfoId <= 0 || userId <= 0) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+            throw new BusinessException(ResponseStatus.PARAMS_ERROR);
         }
         // 根据ID获取接口信息对象
         QueryWrapper<UserInterfaceInfo> queryWrapper = new QueryWrapper<>();
@@ -178,11 +178,11 @@ public class UserInterfaceInfoServiceImpl extends ServiceImpl<UserInterfaceInfoM
         queryWrapper.eq("user_id", userId);
         UserInterfaceInfo userInterfaceInfo = this.getOne(queryWrapper);
         if (userInterfaceInfo == null) {
-            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "接口不存在");
+            throw new BusinessException(ResponseStatus.NOT_FOUND, "接口不存在");
         }
         // 判断剩余次数是否足够
         if (userInterfaceInfo.getLeftNum() <= 0) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "调用次数不足");
+            throw new BusinessException(ResponseStatus.PARAMS_ERROR, "调用次数不足");
         }
         // 构造UpdateWrapper对象，设置更新条件和更新内容
         UpdateWrapper<UserInterfaceInfo> updateWrapper = new UpdateWrapper<>();
@@ -197,7 +197,7 @@ public class UserInterfaceInfoServiceImpl extends ServiceImpl<UserInterfaceInfoM
     @Transactional
     public IPage<InterfaceInfo> getAvailableInterfaceInfo(InterfaceInfoQueryRequest interfaceInfoQueryRequest, long userId) {
         if (userId == 0) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+            throw new BusinessException(ResponseStatus.PARAMS_ERROR);
         }
 
         long current = interfaceInfoQueryRequest.getCurrent();
@@ -205,7 +205,7 @@ public class UserInterfaceInfoServiceImpl extends ServiceImpl<UserInterfaceInfoM
 
         // 限制爬虫
         if (size > 50) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+            throw new BusinessException(ResponseStatus.PARAMS_ERROR);
         }
 
         PageRequest pageRequest = new PageRequest();

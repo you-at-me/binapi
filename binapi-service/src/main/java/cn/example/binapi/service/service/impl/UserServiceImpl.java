@@ -2,7 +2,8 @@ package cn.example.binapi.service.service.impl;
 
 import cn.example.binapi.common.constant.UserConstant;
 import cn.example.binapi.common.model.entity.User;
-import cn.example.binapi.service.common.ErrorCode;
+import cn.example.binapi.service.common.ResponseStatus;
+import cn.example.binapi.service.common.ResponseText;
 import cn.example.binapi.service.exception.BusinessException;
 import cn.example.binapi.service.mapper.UserMapper;
 import cn.example.binapi.service.service.UserService;
@@ -20,8 +21,9 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Objects;
 
+import static cn.example.binapi.common.constant.CommonConstant.SALT;
 import static cn.example.binapi.common.constant.UserConstant.USER_LOGIN_STATE;
-import static cn.example.binapi.service.common.ErrorCode.PARAMS_ERROR;
+import static cn.example.binapi.service.common.ResponseStatus.PARAMS_ERROR;
 
 
 /**
@@ -34,28 +36,23 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Resource
     private UserMapper userMapper;
 
-    /**
-     * 盐值，混淆密码
-     */
-    private static final String SALT = "binapi";
-
     @Override
     public long userRegister(String account, String password, String checkPassword, String phoneOrMail) { // 另一种注册方式，手机号和邮箱注册防水板
         // 1. 校验
         if (StringUtils.isAnyBlank(account, password, checkPassword)) {
-            throw new BusinessException(PARAMS_ERROR, "参数为空");
+            throw new BusinessException(PARAMS_ERROR, ResponseText.PARAMS_EMPTY.getText());
         }
         if (account.length() < 4) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户账号过短");
+            throw new BusinessException(ResponseStatus.PARAMS_ERROR, ResponseText.ACCOUNT_SHORT.getText());
         }
         if (account.length() > 16) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户账号过长");
+            throw new BusinessException(ResponseStatus.PARAMS_ERROR, ResponseText.ACCOUNT_LONG.getText());
         }
         if (password.length() < 6 || checkPassword.length() < 6) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户密码过短");
+            throw new BusinessException(ResponseStatus.PARAMS_ERROR, "用户密码过短");
         }
         if (password.length() > 20 || checkPassword.length() > 20) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户密码过长");
+            throw new BusinessException(ResponseStatus.PARAMS_ERROR, "用户密码过长");
         }
         // 密码和校验密码相同
         if (!password.equals(checkPassword)) {
@@ -85,7 +82,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             user.setSecretKey(secretKey);
             boolean saveResult = save(user);
             if (!saveResult) {
-                throw new BusinessException(ErrorCode.SYSTEM_ERROR, "注册失败，数据库错误");
+                throw new BusinessException(ResponseStatus.SYSTEM_ERROR, "注册失败，数据库错误");
             }
             return user.getId();
         }
@@ -132,7 +129,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         // 先判断是否已登录
         User currentUser = (User) request.getSession().getAttribute(USER_LOGIN_STATE);
         if (Objects.isNull(currentUser) || ObjectUtil.isEmpty(currentUser.getId())) {
-            throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR);
+            throw new BusinessException(ResponseStatus.NOT_LOGIN);
         }
         request.getSession().setAttribute(USER_LOGIN_STATE, currentUser);
         return currentUser;
@@ -154,11 +151,74 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Override
     public boolean userLogout(HttpServletRequest request) {
         if (request.getSession().getAttribute(USER_LOGIN_STATE) == null) {
-            throw new BusinessException(ErrorCode.OPERATION_ERROR, "未登录");
+            throw new BusinessException(ResponseStatus.OPERATION_ERROR, ResponseStatus.NOT_LOGIN.getMessage());
         }
         request.getSession().removeAttribute(USER_LOGIN_STATE);
         return true;
     }
+
+    @Override
+    public Integer getStars() {
+        // // 从缓存查询
+        // Integer redisStars = (Integer) redisTemplate.opsForValue().get(GITHUB_STARS_PREFIX);
+        // if (redisStars != null) {
+        //     return redisStars;
+        // }
+        //
+        // // 获取github stars
+        // String listContent;
+        // try {
+        //     listContent= HttpUtil.get("https://img.shields.io/github/stars/AliasJeff?style=social");
+        // }catch (Exception e){
+        //     throw new BusinessException(ResponseStatus.OPERATION_ERROR,"获取GitHub Starts 超时");
+        // }
+        // //该操作查询时间较长
+        // List<String> titles = ReUtil.findAll("<title>(.*?)</title>", listContent, 1);
+        // String str = null;
+        // for (String title : titles) {
+        //     //打印标题
+        //     String[] split = title.split(":");
+        //     str = split[1];
+        // }
+        //
+        // Integer githubStars = Integer.parseInt(str.trim());
+        //
+        // // 获取gitee star数（可能超出请求限制）
+        // String owner = "AliasJeff";
+        // String repo1 = "alias-openapi-frontend";
+        // String repo2 = "alias-openapi-backend";
+        // String url1 = "https://gitee.com/api/v5/repos/" + owner + "/" + repo1;
+        // String url2 = "https://gitee.com/api/v5/repos/" + owner + "/" + repo2;
+        //
+        // OkHttpClient client = new OkHttpClient();
+        //
+        // Integer giteeStars = 0;
+        // try {
+        //     Integer starCount1 = getStarCount(client, url1);
+        //     Integer starCount2 = getStarCount(client, url2);
+        //     giteeStars = starCount1 + starCount2;
+        // } catch (Exception e) {
+        //     e.printStackTrace();
+        // }
+        //
+        // // 加入缓存
+        // redisTemplate.opsForValue().set(GITHUB_STARS_PREFIX, giteeStars + githubStars, 1, TimeUnit.MINUTES);
+        //
+        // return githubStars + giteeStars;
+        return 1000;
+    }
+
+    // private static Integer getStarCount(OkHttpClient client, String url) throws Exception {
+    //     Request request = new Request.Builder()
+    //             .url(url)
+    //             .build();
+    //
+    //     Response response = client.newCall(request).execute();
+    //     String responseData = response.body().string();
+    //     System.out.println(responseData);
+    //     JSONObject jsonObject = new JSONObject(responseData);
+    //     return jsonObject.getInt("stargazers_count");
+    // }
 
 }
 

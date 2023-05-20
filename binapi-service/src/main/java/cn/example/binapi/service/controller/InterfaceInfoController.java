@@ -1,6 +1,7 @@
 package cn.example.binapi.service.controller;
 
 import cn.example.binapi.common.common.InterfaceIdRequest;
+import cn.example.binapi.common.constant.UserConstant;
 import cn.example.binapi.common.model.dto.interfaceinfo.InterfaceInfoAddRequest;
 import cn.example.binapi.common.model.dto.interfaceinfo.InterfaceInfoInvokeRequest;
 import cn.example.binapi.common.model.dto.interfaceinfo.InterfaceInfoQueryRequest;
@@ -23,7 +24,7 @@ import java.util.List;
  * 帖子接口
  */
 @RestController
-@RequestMapping("/interface_info")
+@RequestMapping("/interfaceInfo")
 @Slf4j
 public class InterfaceInfoController {
 
@@ -69,7 +70,7 @@ public class InterfaceInfoController {
      * 下线接口
      */
     @PostMapping("offline")
-    @AuthCheck(mustRole = "admin")
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     public BaseResponse<Boolean> offlineInterfaceInfo(@RequestBody InterfaceIdRequest idRequest) {
         return ResultUtils.success(interfaceInfoService.offlineInterfaceInfo(idRequest));
     }

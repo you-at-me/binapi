@@ -1,6 +1,6 @@
 package cn.example.binapi.service.service.impl;
 
-import cn.example.binapi.service.common.ErrorCode;
+import cn.example.binapi.service.common.ResponseStatus;
 import cn.example.binapi.service.exception.BusinessException;
 import cn.example.binapi.service.mapper.PostMapper;
 import cn.example.binapi.common.model.entity.Post;
@@ -21,7 +21,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
     @Override
     public void validPost(Post post, boolean add) {
         if (post == null) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+            throw new BusinessException(ResponseStatus.PARAMS_ERROR);
         }
         Integer age = post.getAge();
         Integer gender = post.getGender();
@@ -34,20 +34,20 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         // 创建时，所有参数必须非空
         if (add) {
             if (StringUtils.isAnyBlank(content, job, place, education, loveExp) || ObjectUtils.anyNull(age, gender)) {
-                throw new BusinessException(ErrorCode.PARAMS_ERROR);
+                throw new BusinessException(ResponseStatus.PARAMS_ERROR);
             }
         }
         if (StringUtils.isNotBlank(content) && content.length() > 8192) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "内容过长");
+            throw new BusinessException(ResponseStatus.PARAMS_ERROR, "内容过长");
         }
         if (reviewStatus != null && !PostReviewStatusEnum.getValues().contains(reviewStatus)) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+            throw new BusinessException(ResponseStatus.PARAMS_ERROR);
         }
         if (age != null && (age < 18 || age > 100)) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "年龄不符合要求");
+            throw new BusinessException(ResponseStatus.PARAMS_ERROR, "年龄不符合要求");
         }
         if (gender != null && !PostGenderEnum.getValues().contains(gender)) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "性别不符合要求");
+            throw new BusinessException(ResponseStatus.PARAMS_ERROR, "性别不符合要求");
         }
     }
 }
