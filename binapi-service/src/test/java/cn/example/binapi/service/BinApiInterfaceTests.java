@@ -31,7 +31,7 @@ public class BinApiInterfaceTests {
         Api api = new Api();
         api.setBody("Kite");
         String result = client.getResult(api);
-        System.out.println("Kite".equals(result));
+        Assertions.assertEquals("Kite",result);
     }
 
     @Test
