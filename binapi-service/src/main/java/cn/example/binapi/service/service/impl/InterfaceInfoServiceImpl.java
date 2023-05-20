@@ -256,7 +256,8 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
         RemoteCallClient remoteCallClient = new RemoteCallClient(appId, accessKey, secretKey);
         String result = remoteCallClient.getResult(api);
         if (StrUtil.isNotBlank(result)) {
-            // 在接口被调用的时候更新缓存，即使已经存在直接覆盖即可
+            // 在接口被成功调用的时候先对调用次数做统计，然后更新缓存，即使缓存已存在直接覆盖即可
+
             stringRedisTemplate.opsForHash().put(INTERFACE_PREFIX, String.valueOf(id), JSONUtil.toJsonStr(o));
         }
         return result;

@@ -6,6 +6,7 @@ import cn.example.binapi.common.model.entity.User;
 import cn.example.binapi.common.model.entity.UserInterfaceInfo;
 import cn.example.binapi.service.common.ResponseStatus;
 import cn.example.binapi.common.common.PageRequest;
+import cn.example.binapi.service.common.ResponseText;
 import cn.example.binapi.service.exception.BusinessException;
 import cn.example.binapi.service.mapper.InterfaceInfoMapper;
 import cn.example.binapi.service.mapper.UserInterfaceInfoMapper;
@@ -13,6 +14,7 @@ import cn.example.binapi.common.model.dto.interfaceinfo.InterfaceInfoQueryReques
 import cn.example.binapi.service.service.InterfaceInfoService;
 import cn.example.binapi.service.service.UserInterfaceInfoService;
 import cn.example.binapi.service.service.UserService;
+import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -43,7 +45,7 @@ public class UserInterfaceInfoServiceImpl extends ServiceImpl<UserInterfaceInfoM
     private InterfaceInfoMapper interfaceInfoMapper;
 
     /**
-     * todo 优化代码
+     * TODO 优化代码
      * <p>
      * 性能问题：可以通过在查询用户已有的接口调用记录时，使用 SQL 的 join 操作，一次性查询出所有用户和接口的关联关系，避免多次查询数据库。同时，可以将查询出的结果缓存到内存中，避免重复查询。
      * <p>
@@ -152,7 +154,7 @@ public class UserInterfaceInfoServiceImpl extends ServiceImpl<UserInterfaceInfoM
 
         QueryWrapper<UserInterfaceInfo> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("interface_info_id", userInterfaceInfo.getInterfaceInfoId());
-        queryWrapper.eq("user_id", userInterfaceInfo.getCreator());
+        queryWrapper.eq("creator", userInterfaceInfo.getCreator());
         UserInterfaceInfo one = this.getOne(queryWrapper);
 
         if (userInterfaceInfo.getLeftNum() <= 0) {
@@ -161,33 +163,36 @@ public class UserInterfaceInfoServiceImpl extends ServiceImpl<UserInterfaceInfoM
     }
 
     /**
-     * 调用次数计数
+     * 接口调用次数+1
      *
      * @param interfaceInfoId 接口信息ID
-     * @param userId 用户ID
+     * @param creator 用户ID
      * @return boolean
      */
-    public boolean invokeCount(long interfaceInfoId, long userId) {
+    @Override
+    @Transactional
+    public boolean invokeCount(long interfaceInfoId, long creator) {
         // 判断参数是否合法
-        if (interfaceInfoId <= 0 || userId <= 0) {
+        if (interfaceInfoId <= 0 || creator <= 0) {
             throw new BusinessException(ResponseStatus.PARAMS_ERROR);
         }
         // 根据ID获取接口信息对象
         QueryWrapper<UserInterfaceInfo> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("interface_info_id", interfaceInfoId);
-        queryWrapper.eq("user_id", userId);
+        queryWrapper.eq("creator", creator);
         UserInterfaceInfo userInterfaceInfo = this.getOne(queryWrapper);
-        if (userInterfaceInfo == null) {
-            throw new BusinessException(ResponseStatus.NOT_FOUND, "接口不存在");
+        if (ObjectUtil.isNull(userInterfaceInfo)) {
+            throw new BusinessException(ResponseStatus.NOT_FOUND, ResponseText.INTERFACE_EMPTY.getText());
         }
         // 判断剩余次数是否足够
         if (userInterfaceInfo.getLeftNum() <= 0) {
-            throw new BusinessException(ResponseStatus.PARAMS_ERROR, "调用次数不足");
+            throw new BusinessException(ResponseStatus.PARAMS_ERROR, ResponseText.INTERFACE_NOT_FULL.getText());
         }
         // 构造UpdateWrapper对象，设置更新条件和更新内容
+        // TODO：这里最好不要直接操作数据库，要考虑高并发多流量场景，可以使用原子类缓存加锁设计业务场景
         UpdateWrapper<UserInterfaceInfo> updateWrapper = new UpdateWrapper<>();
         updateWrapper.eq("interface_info_id", interfaceInfoId);
-        updateWrapper.eq("user_id", userId);
+        updateWrapper.eq("creator", creator);
         updateWrapper.setSql("left_num = left_num - 1, total_num = total_num + 1");
         // 执行更新操作
         return this.update(updateWrapper);
@@ -195,8 +200,8 @@ public class UserInterfaceInfoServiceImpl extends ServiceImpl<UserInterfaceInfoM
 
     @Override
     @Transactional
-    public IPage<InterfaceInfo> getAvailableInterfaceInfo(InterfaceInfoQueryRequest interfaceInfoQueryRequest, long userId) {
-        if (userId == 0) {
+    public IPage<InterfaceInfo> getAvailableInterfaceInfo(InterfaceInfoQueryRequest interfaceInfoQueryRequest, long creator) {
+        if (creator == 0) {
             throw new BusinessException(ResponseStatus.PARAMS_ERROR);
         }
 
@@ -217,6 +222,6 @@ public class UserInterfaceInfoServiceImpl extends ServiceImpl<UserInterfaceInfoM
         Page<InterfaceInfo> page = new Page<>(current, size);
         QueryWrapper<InterfaceInfo> wrapper = new QueryWrapper<>();
 
-        return interfaceInfoMapper.getInterfaceInfoByUserId(page, userId, wrapper);
+        return interfaceInfoMapper.getInterfaceInfoByUserId(page, creator, wrapper);
     }
 }

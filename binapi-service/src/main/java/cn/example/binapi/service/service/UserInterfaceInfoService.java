@@ -12,18 +12,19 @@ import com.baomidou.mybatisplus.extension.service.IService;
 public interface UserInterfaceInfoService extends IService<UserInterfaceInfo> {
 
     /**
-     * 初始化接口免费调用次数     */
+     * 初始化接口免费调用次数
+     */
     void addUserInterfaceInfo();
 
     void validUserInterfaceInfo(UserInterfaceInfo userInterfaceInfo, boolean add);
 
     /**
-     * 调用接口统计
+     * 接口调用次数+1
      */
-    boolean invokeCount(long interfaceInfoId, long userId);
+    boolean invokeCount(long interfaceInfoId, long creator);
 
     /**
      * 获取用户可用接口
      */
-    IPage<InterfaceInfo> getAvailableInterfaceInfo(InterfaceInfoQueryRequest interfaceInfoQueryRequest, long userId);
+    IPage<InterfaceInfo> getAvailableInterfaceInfo(InterfaceInfoQueryRequest interfaceInfoQueryRequest, long creator);
 }
