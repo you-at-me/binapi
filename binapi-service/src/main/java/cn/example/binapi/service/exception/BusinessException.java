@@ -1,6 +1,6 @@
 package cn.example.binapi.service.exception;
 
-import cn.example.binapi.service.common.ErrorCode;
+import cn.example.binapi.service.common.ResponseStatus;
 
 /**
  * 自定义异常类
@@ -14,12 +14,12 @@ public class BusinessException extends RuntimeException {
         this.code = code;
     }
 
-    public BusinessException(ErrorCode errorCode) {
+    public BusinessException(ResponseStatus errorCode) {
         super(errorCode.getMessage());
         this.code = errorCode.getCode();
     }
 
-    public BusinessException(ErrorCode errorCode, String message) {
+    public BusinessException(ResponseStatus errorCode, String message) {
         super(message);
         this.code = errorCode.getCode();
     }

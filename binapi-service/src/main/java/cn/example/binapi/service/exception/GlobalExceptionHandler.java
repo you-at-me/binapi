@@ -1,7 +1,7 @@
 package cn.example.binapi.service.exception;
 
 import cn.example.binapi.service.common.BaseResponse;
-import cn.example.binapi.service.common.ErrorCode;
+import cn.example.binapi.service.common.ResponseStatus;
 import cn.example.binapi.service.common.ResultUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -23,6 +23,6 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(RuntimeException.class)
     public BaseResponse<?> runtimeExceptionHandler(RuntimeException e) {
         log.error("runtimeException", e);
-        return ResultUtils.error(ErrorCode.SYSTEM_ERROR, e.getMessage());
+        return ResultUtils.error(ResponseStatus.SYSTEM_ERROR, e.getMessage());
     }
 }
