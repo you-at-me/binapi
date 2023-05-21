@@ -1,0 +1,51 @@
+server:
+  port: 10010
+
+spring:
+  application:
+    name: binapi-gateway
+  cloud:
+    gateway:
+      default-filters:
+        - AddResponseHeader=OH,PH
+
+      routes:
+        - id: binapi_service
+          uri: http://127.0.0.1:9000
+          predicates:
+            - Path=/service/**
+        - id: binapi_interface
+          uri: http://127.0.0.1:9999
+          predicates:
+            - Path=/interface/**
+
+      globalcors:
+        add-to-simple-url-handler-mapping: true
+        corsConfigurations:
+          '[/**]':
+            allowCredentials: true # 跨域请求当中是否允许携带cookie
+            allowedOrigins: "*" # 允许哪些网站进行跨域请求
+            allowedHeaders: "*" # 允许跨域请求中携带请求头信息
+            allowedMethods: "*" # 允许跨域的ajax请求方法
+            maxAge: 3628800 # 设置跨域检测有效期，单位是秒，表示在这个时间段内所有允许通过的请求直接放行
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+      config:
+        server-addr: 127.0.0.1:8848
+        file-extension: yml
+        shared-configs:
+          - application-${spring.profiles.active}.${spring.cloud.nacos.config.file-extension}
+        import-check:
+          enabled: false #关闭导入文件检查
+
+dubbo:
+  application:
+    name: binapi-gateway-dubbo
+  protocol:
+    name: dubbo
+    port: 20880
+  registry:
+    id: nacos-gataway-registry
+    protocol: nacos
+    address: nacos://127.0.0.1:8848
