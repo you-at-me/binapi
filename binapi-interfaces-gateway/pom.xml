@@ -6,10 +6,11 @@
         <artifactId>binapi-root</artifactId>
         <groupId>cn.example.binapi</groupId>
         <version>1.0</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>binapi-gateway</artifactId>
+    <artifactId>binapi-interfaces-gateway</artifactId>
 
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
@@ -80,7 +81,7 @@
 
     <build>
         <!-- 指定最后打成jar包的名称 -->
-        <finalName>binapi-gateway</finalName>
+        <finalName>binapi-api-gateway</finalName>
         <plugins>
             <!-- 插件配置 -->
             <plugin>
@@ -90,7 +91,7 @@
                     <!-- layout标签表示maven打包之后存档的类型（对应于依赖项在其中的布局方式）可取的值为 JAR、WAR、ZIP、DIR、NONE，默认为基于存档类型的猜测。NONE值表示让maven不打该模块所依赖别的模块的可执行jar，这个可执行jar就是该模块所依赖于另一个模块打的可执行jar包，一般NONE值也就应用于普通maven工程下打包，而对于一些springboot工程则需要使用其他值。但是需要注意的是如果该普通maven工程需要依赖别的普通maven工程下的类时，这个时候就不能配置NONE值，需要配置其他的值。-->
                     <layout>ZIP</layout>
                     <!-- 主程序入口，一般配置在springboot项目中 -->
-                    <mainClass>cn.example.gateway.GateWayServiceApplication</mainClass>
+                    <mainClass>cn.example.binapi.interfaces.gateway.InterfacesGatewayApplication</mainClass>
                     <excludes>
                         <exclude>
                             <groupId>org.projectlombok</groupId>

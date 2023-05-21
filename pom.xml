@@ -21,7 +21,8 @@
         <module>binapi-service</module>
         <module>binapi-interfaces</module>
         <module>binapi-common</module>
-        <module>binapi-gateway</module>
+        <module>binapi-interfaces-gateway</module>
+        <module>binapi-global-gateway</module>
     </modules>
 
     <properties>
