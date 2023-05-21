@@ -1,4 +1,4 @@
-package cn.example.binapi.service.service.inner;
+package cn.example.binapi.common.service.inner;
 
 import cn.example.binapi.common.model.entity.User;
 

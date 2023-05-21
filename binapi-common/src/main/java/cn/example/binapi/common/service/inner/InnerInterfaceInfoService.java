@@ -1,4 +1,4 @@
-package cn.example.binapi.service.service.inner;
+package cn.example.binapi.common.service.inner;
 
 import cn.example.binapi.common.model.entity.InterfaceInfo;
 
@@ -15,5 +15,5 @@ public interface InnerInterfaceInfoService {
     /**
      * 查询用户是否还有调用次数
      */
-    boolean hasCount(Long interfaceId, Long userId);
+    boolean hasCount(Long interfaceId, Long creator);
 }
