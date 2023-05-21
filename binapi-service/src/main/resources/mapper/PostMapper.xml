@@ -19,7 +19,7 @@
         <result property="reviewMessage" column="reviewMessage" jdbcType="VARCHAR"/>
         <result property="viewNum" column="viewNum" jdbcType="INTEGER"/>
         <result property="thumbNum" column="thumbNum" jdbcType="INTEGER"/>
-        <result property="userId" column="userId" jdbcType="BIGINT"/>
+        <result property="userId" column="user_id" jdbcType="BIGINT"/>
         <result property="createTime" column="createTime" jdbcType="TIMESTAMP"/>
         <result property="updateTime" column="updateTime" jdbcType="TIMESTAMP"/>
         <result property="isDelete" column="isDelete" jdbcType="TINYINT"/>
