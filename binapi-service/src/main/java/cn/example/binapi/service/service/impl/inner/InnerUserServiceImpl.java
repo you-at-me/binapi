@@ -5,7 +5,7 @@ import cn.example.binapi.common.model.entity.User;
 import cn.example.binapi.service.common.ResponseStatus;
 import cn.example.binapi.service.exception.BusinessException;
 import cn.example.binapi.service.mapper.UserMapper;
-import cn.example.binapi.service.service.inner.InnerUserService;
+import cn.example.binapi.common.service.inner.InnerUserService;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.dubbo.config.annotation.DubboService;

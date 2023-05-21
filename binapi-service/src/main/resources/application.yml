@@ -1,6 +1,6 @@
 spring:
   application:
-    name: springboot-init
+    name: binapi-service
   # DataSource Config
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -29,8 +29,21 @@ spring:
         time-between-eviction-runs: 10s
   main:
     allow-circular-references: true # 允许循环依赖注入，默认为 false
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+      config:
+        server-addr: 127.0.0.1:8848
+        file-extension: yml
+        shared-configs:
+          - application-${spring.profiles.active}.${spring.cloud.nacos.config.file-extension}
+        import-check:
+          enabled: false #关闭导入文件检查
+  #config:
+    #import: optional:application.yml
 server:
-  port: 9888
+  port: 9000
   servlet:
     context-path: /service
 mybatis-plus:
@@ -52,3 +65,14 @@ alias:
       secret-key: Carl
       app-id: 123456
       access-key: abcd
+
+dubbo:
+  application:
+    name: binapi-service-dubbo
+  protocol:
+    name: dubbo
+    port: 20880
+  registry:
+    id: nacos-service-registry
+    protocol: nacos
+    address: nacos://127.0.0.1:8848

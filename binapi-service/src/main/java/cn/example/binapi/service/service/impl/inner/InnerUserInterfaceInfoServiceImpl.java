@@ -1,7 +1,7 @@
 package cn.example.binapi.service.service.impl.inner;
 
 import cn.example.binapi.service.service.UserInterfaceInfoService;
-import cn.example.binapi.service.service.inner.InnerUserInterfaceInfoService;
+import cn.example.binapi.common.service.inner.InnerUserInterfaceInfoService;
 import org.apache.dubbo.config.annotation.DubboService;
 
 import javax.annotation.Resource;

@@ -6,7 +6,7 @@ import cn.example.binapi.service.common.ResponseStatus;
 import cn.example.binapi.service.exception.BusinessException;
 import cn.example.binapi.service.mapper.InterfaceInfoMapper;
 import cn.example.binapi.service.service.UserInterfaceInfoService;
-import cn.example.binapi.service.service.inner.InnerInterfaceInfoService;
+import cn.example.binapi.common.service.inner.InnerInterfaceInfoService;
 import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import lombok.extern.slf4j.Slf4j;
@@ -17,7 +17,7 @@ import javax.annotation.Resource;
 import java.net.URI;
 
 @Slf4j
-@DubboService
+@DubboService // 通过这个配置可以基于 Spring Boot 去发布 Dubbo 服务
 public class InnerInterfaceInfoServiceImpl implements InnerInterfaceInfoService {
 
     @Resource
