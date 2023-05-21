@@ -1,8 +1,24 @@
 server:
-  port: 9000
+  port: 9999
   servlet:
     context-path: /interface
+
 spring:
+  application:
+    name: binapi-interface
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+      config:
+        server-addr: 127.0.0.1:8848
+        file-extension: yml
+        shared-configs:
+          - application-${spring.profiles.active}.${spring.cloud.nacos.config.file-extension}
+        import-check:
+          enabled: false #nacos2021版本会检查配置的属性，没有会报错，通过这个取消，或者导入下述的yml文件
+  #config: #注意 springboot、springcloud、SpringAlibaba、nacos 之间的版本兼容性：https://github.com/alibaba/spring-cloud-alibaba/wiki/%E7%89%88%E6%9C%AC%E8%AF%B4%E6%98%8E#%E7%BB%84%E4%BB%B6%E7%89%88%E6%9C%AC%E5%85%B3%E7%B3%BB
+    #import: optional:bootstrap.yml #必须加前缀optional否则会报错，注意每个版本都不一样的配置，配置似乎失效
   mvc:
     pathmatch:
       matching-strategy: ant_path_matcher
@@ -17,3 +33,4 @@ spring:
     username: zhexunchen@qq.com
     password: ualqybfjbbnhcaab
     default-encoding: utf-8
+
