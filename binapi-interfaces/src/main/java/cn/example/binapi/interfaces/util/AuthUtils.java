@@ -20,7 +20,7 @@ public class AuthUtils {
 
         // String accessKey = headers.get("accessKey");
         // String nonce = headers.get("nonce");
-        // String timestamp = headers.get("timestamp");
+        // String timeSecond = headers.get("timeSecond");
         // String sign = headers.get("sign");
         // String body = headers.get("body"); // 放入请求体当中只是为了做一个反推出秘钥的条件
         //
@@ -56,7 +56,7 @@ public class AuthUtils {
         map.put("accessKey", request.getHeader("accessKey"));
         // map.put("secretKey", request.getHeader("secretKey"));
         map.put("body", request.getHeader("body"));
-        map.put("timestamp", request.getHeader("timestamp"));
+        map.put("timeSecond", request.getHeader("timeSecond"));
         map.put("nonce", request.getHeader("nonce"));
         map.put("sign", request.getHeader("sign"));
         return map;
