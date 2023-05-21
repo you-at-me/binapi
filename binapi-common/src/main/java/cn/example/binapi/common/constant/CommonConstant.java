@@ -19,4 +19,10 @@ public interface CommonConstant {
      * 盐值，混淆密码
      */
     String SALT = "binapi";
+
+
+    /**
+     * 接口可用次数
+     */
+    String COUNT_EMPTY = "调用次数不足";
 }
