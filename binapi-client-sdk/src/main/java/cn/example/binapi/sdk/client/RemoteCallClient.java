@@ -30,7 +30,7 @@ public class RemoteCallClient {
     private String secretKey;
 
     // @Value("${alias.openapi.client.url}")
-    private final String url = "http://localhost:9000/api/main";
+    private final String url = "http://localhost:9999/api/main";
 
     public RemoteCallClient() {
     }
@@ -69,7 +69,7 @@ public class RemoteCallClient {
         headers.put("accessKey", accessKey);// 通用标识，复杂、无序、无规律
         // headers.put("secretKey", secretKey); // 秘钥，复杂、无序、无规律; 秘钥不能直接放入请求当中在服务器之间随意传输，有可能会被拦截产生安全问题
         headers.put("body", body);
-        headers.put("timestamp", String.valueOf(DateUtil.date(System.currentTimeMillis()))); // 当前此次请求的时间戳，单位秒
+        headers.put("timeSecond", String.valueOf(DateUtil.date(System.currentTimeMillis() / 1000))); // 当前此次请求的时间戳，单位秒
         headers.put("nonce", RandomUtil.randomNumbers(4)); // nonce 随机数，用于防止重放，也就是某一个请求执行发送请求
         headers.put("sign", SignUtil.genSign(body, secretKey));  // 签名秘钥
         return headers;

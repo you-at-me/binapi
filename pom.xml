@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.7.8</version>
+        <version>2.6.13</version>
     </parent>
 
     <groupId>cn.example.binapi</groupId>
@@ -27,17 +27,27 @@
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
-        <spring-cloud.version>Hoxton.SR8</spring-cloud.version>
-        <spring-cloud-alibaba.version>2.2.5.RELEASE</spring-cloud-alibaba.version>
+        <spring-boot.version>2.6.13</spring-boot.version>
+        <spring-cloud.version>2021.0.5</spring-cloud.version>
+        <spring-cloud-alibaba.version>2021.0.5.0</spring-cloud-alibaba.version>
+        <dubbo.version>3.0.9</dubbo.version>
         <hutool-version>5.7.22</hutool-version>
         <mysql-version>8.0.25</mysql-version>
-        <mybatis-spring-version>2.3.0</mybatis-spring-version>
-        <mybatis-plus-version>3.5.2</mybatis-plus-version>
+        <mybatis-spring.version>2.3.0</mybatis-spring.version>
+        <mybatis-plus.version>3.5.2</mybatis-plus.version>
         <knife4j-version>3.0.3</knife4j-version>
     </properties>
 
     <dependencyManagement>
         <dependencies>
+            <!-- Spring Boot -->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring-boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
             <!-- 配置springcloud版本组件依赖 -->
             <dependency>
                 <groupId>org.springframework.cloud</groupId>
@@ -51,6 +61,14 @@
                 <groupId>com.alibaba.cloud</groupId>
                 <artifactId>spring-cloud-alibaba-dependencies</artifactId>
                 <version>${spring-cloud-alibaba.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <!-- Dubbo -->
+            <dependency>
+                <groupId>org.apache.dubbo</groupId>
+                <artifactId>dubbo-bom</artifactId>
+                <version>${dubbo.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -80,12 +98,12 @@
             <dependency>
                 <groupId>org.mybatis.spring.boot</groupId>
                 <artifactId>mybatis-spring-boot-starter</artifactId>
-                <version>${mybatis-spring-version}</version>
+                <version>${mybatis-spring.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.baomidou</groupId>
                 <artifactId>mybatis-plus-boot-starter</artifactId>
-                <version>${mybatis-plus-version}</version>
+                <version>${mybatis-plus.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.github.xiaoymin</groupId>
