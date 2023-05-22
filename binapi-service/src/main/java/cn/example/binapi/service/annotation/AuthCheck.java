@@ -6,7 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 权限校验
+ * 权限校验，使用该注解可带有某种用户的权限才可访问对应的资源，比如: user、admin; 若不指定只有登录用户才可访问
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
