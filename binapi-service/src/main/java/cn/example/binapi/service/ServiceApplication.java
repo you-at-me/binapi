@@ -8,10 +8,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 @EnableDubbo
 // @EnableAspectJAutoProxy(exposeProxy = true, proxyTargetClass = true)
-public class BinApiServiceApplication {
+public class ServiceApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(BinApiServiceApplication.class, args);
+        SpringApplication.run(ServiceApplication.class, args);
     }
 
 }

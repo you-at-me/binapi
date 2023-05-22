@@ -17,7 +17,7 @@ spring:
           - application-${spring.profiles.active}.${spring.cloud.nacos.config.file-extension}
         import-check:
           enabled: false #nacos2021版本会检查配置的属性，没有会报错，通过这个取消，或者导入下述的yml文件
-  #config: #注意 springboot、springcloud、SpringAlibaba、nacos 之间的版本兼容性：https://github.com/alibaba/spring-cloud-alibaba/wiki/%E7%89%88%E6%9C%AC%E8%AF%B4%E6%98%8E#%E7%BB%84%E4%BB%B6%E7%89%88%E6%9C%AC%E5%85%B3%E7%B3%BB
+    #config: #注意 springboot、springcloud、SpringAlibaba、nacos 之间的版本兼容性：https://github.com/alibaba/spring-cloud-alibaba/wiki/%E7%89%88%E6%9C%AC%E8%AF%B4%E6%98%8E#%E7%BB%84%E4%BB%B6%E7%89%88%E6%9C%AC%E5%85%B3%E7%B3%BB
     #import: optional:bootstrap.yml #必须加前缀optional否则会报错，注意每个版本都不一样的配置，配置似乎失效
   mvc:
     pathmatch:
@@ -33,4 +33,18 @@ spring:
     username: zhexunchen@qq.com
     password: ualqybfjbbnhcaab
     default-encoding: utf-8
+  # redis 配置
+  redis:
+    # 本地的redis并没有设置远程连接功能，所以不能使用连接主机ip地址。原因是这里没有设置密码，要不然知道了本地的ip就谁都可以连接操作本机的redis服务了，这样不好。但这里改变使用了服务器的redis服务了。
+    host: 127.0.0.1
+    port: 6379
+    password: 321998
+    # springboot操作redis服务的客户端类型有两种：lettuce和jedis。默认操作redis的客户端类型是lettuce，两者最大的区别是jedis存在高并发线程安全问题而lettuce没有。
+    lettuce:
+      pool:
+        max-active: 10
+        max-idle: 10
+        min-idle: 1
+        max-wait: 1000ms
+        time-between-eviction-runs: 10s
 
