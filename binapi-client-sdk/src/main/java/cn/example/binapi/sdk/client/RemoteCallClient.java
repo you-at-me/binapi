@@ -43,7 +43,7 @@ public class RemoteCallClient {
 
     public String getResult(Api api) {
         String json = JSONUtil.toJsonStr(api.getBody()); //body就是请求参数
-        if (GET.equalsIgnoreCase(api.getMethod())) { // 所有的请求都通过main进行统一请求转发，且是通过接口网关服务进行转发到main请求路径的，防止对外暴露接口
+        if (GET.equalsIgnoreCase(api.getMethod())) { // 所有的请求都通过main进行统一请求转发到各个接口进行调用，且是通过对应的路径映射进行调用的方法，而且还通过接口网关服务进行转发到main请求路径的，防止对外暴露接口
             return makeRequest(HttpRequest.get(REQUEST_REDIRECT_URL), api, json).execute().body();
         }
         if (POST.equalsIgnoreCase(api.getMethod())) {
