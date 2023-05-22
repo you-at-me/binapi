@@ -39,11 +39,11 @@ spring:
         shared-configs:
           - application-${spring.profiles.active}.${spring.cloud.nacos.config.file-extension}
         import-check:
-          enabled: false #关闭导入文件检查
+          enabled: false #关闭导入文件检查，注意微服务版本的区别
   #config:
     #import: optional:application.yml
 server:
-  port: 9000
+  port: 9999
   servlet:
     context-path: /service
 mybatis-plus:
@@ -68,7 +68,7 @@ alias:
 
 dubbo:
   application:
-    name: binapi-service-dubbo
+    name: binapi-service-provider-dubbo
   protocol:
     name: dubbo
     port: 20880

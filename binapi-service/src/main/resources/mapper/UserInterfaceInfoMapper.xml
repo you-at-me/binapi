@@ -5,15 +5,15 @@
 <mapper namespace="cn.example.binapi.service.mapper.UserInterfaceInfoMapper">
 
     <resultMap id="BaseResultMap" type="cn.example.binapi.common.model.entity.UserInterfaceInfo">
-            <id property="id" column="id" jdbcType="BIGINT"/>
-            <result property="userId" column="user_id" jdbcType="BIGINT"/>
-            <result property="interfaceInfoId" column="interface_info_id" jdbcType="BIGINT"/>
-            <result property="totalNum" column="total_num" jdbcType="INTEGER"/>
-            <result property="leftNum" column="left_num" jdbcType="INTEGER"/>
-            <result property="status" column="status" jdbcType="INTEGER"/>
-            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
-            <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
-            <result property="isDelete" column="is_delete" jdbcType="TINYINT"/>
+        <id property="id" column="id" jdbcType="BIGINT"/>
+        <result property="userId" column="user_id" jdbcType="BIGINT"/>
+        <result property="interfaceInfoId" column="interface_info_id" jdbcType="BIGINT"/>
+        <result property="totalNum" column="total_num" jdbcType="INTEGER"/>
+        <result property="leftNum" column="left_num" jdbcType="INTEGER"/>
+        <result property="status" column="status" jdbcType="INTEGER"/>
+        <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+        <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+        <result property="isDelete" column="is_delete" jdbcType="TINYINT"/>
     </resultMap>
 
     <sql id="Base_Column_List">
@@ -23,7 +23,10 @@
     </sql>
     <select id="listTopInvokeInterfaceInfo"
             resultType="cn.example.binapi.common.model.entity.UserInterfaceInfo">
-        select interface_info_id as interfaceInfoId, sum(total_num) as total_num from tb_user_interface_info group by interface_info_id
-        order by total_num desc limit #{limit};
+        select interface_info_id as interfaceInfoId, sum(total_num) as total_num
+        from tb_user_interface_info
+        group by interface_info_id
+        order by total_num desc
+        limit #{limit};
     </select>
 </mapper>
