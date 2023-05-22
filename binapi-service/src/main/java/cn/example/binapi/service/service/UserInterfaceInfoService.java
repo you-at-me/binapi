@@ -16,15 +16,18 @@ public interface UserInterfaceInfoService extends IService<UserInterfaceInfo> {
      */
     void addUserInterfaceInfo();
 
+    /**
+     * 校验用户
+     */
     void validUserInterfaceInfo(UserInterfaceInfo userInterfaceInfo, boolean add);
 
     /**
      * 接口调用次数+1
      */
-    boolean invokeCount(long interfaceInfoId, long creator);
+    boolean invokeCount(long interfaceInfoId, long userId);
 
     /**
      * 获取用户可用接口
      */
-    IPage<InterfaceInfo> getAvailableInterfaceInfo(InterfaceInfoQueryRequest interfaceInfoQueryRequest, long creator);
+    IPage<InterfaceInfo> getAvailableInterfaceInfo(InterfaceInfoQueryRequest interfaceInfoQueryRequest, long userId);
 }

@@ -90,7 +90,7 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
         validInterfaceInfo(interfaceInfo, true);
         User loginUser = userService.getLoginUser(request);
         // 把当前新增的这条接口信息设置创建人ID
-        interfaceInfo.setCreator(loginUser.getId());
+        interfaceInfo.setUserId(loginUser.getId());
         // 将接口信息保存在数据库当中，等接口被调用的时候再将接口信息数据缓存到 redis 当中
         boolean result = save(interfaceInfo);
         if (!result) {
@@ -112,7 +112,7 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
             throw new BusinessException(ResponseStatus.NOT_FOUND);
         }
         // 仅本人或管理员可删除
-        if (!oldInterfaceInfo.getCreator().equals(user.getId()) && userService.isNotAdmin(request)) {
+        if (!oldInterfaceInfo.getUserId().equals(user.getId()) && userService.isNotAdmin(request)) {
             throw new BusinessException(ResponseStatus.NO_AUTH);
         }
         // 先删除数据库再删除缓存
@@ -141,7 +141,7 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
             throw new BusinessException(ResponseStatus.NOT_FOUND);
         }
         // 仅本人或管理员可修改，更新操作不用更新缓存，只有接口被调用的时候再去构建缓存
-        if (!oldInterfaceInfo.getCreator().equals(user.getId()) && userService.isNotAdmin(request)) {
+        if (!oldInterfaceInfo.getUserId().equals(user.getId()) && userService.isNotAdmin(request)) {
             throw new BusinessException(ResponseStatus.NO_AUTH);
         }
         return updateById(interfaceInfo);
@@ -212,7 +212,6 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
         if (interfaceInfoInvokeRequest == null || interfaceInfoInvokeRequest.getId() == 0) {
             throw new BusinessException(ResponseStatus.PARAMS_ERROR);
         }
-        long id = interfaceInfoInvokeRequest.getId();
         StringBuilder requestParams = new StringBuilder(); // 防止trim报npe
         if (interfaceInfoInvokeRequest.getRequestParams() != null) {
             requestParams = new StringBuilder(interfaceInfoInvokeRequest.getRequestParams().trim());
@@ -224,8 +223,11 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
         log.info("invoke...url: {}", url);
         // 判断接口是否存在，首先从缓存当中获取
         Map<Object, Object> map = stringRedisTemplate.opsForHash().entries(INTERFACE_PREFIX);
-        InterfaceInfo o;
-        if (ObjectUtil.isEmpty(map) || ObjectUtils.isEmpty(o = (InterfaceInfo) map.get(id))) {
+        log.info("map::" + map);
+        InterfaceInfo o = null;
+        long id = interfaceInfoInvokeRequest.getId();
+        if (ObjectUtil.isEmpty(map) || ObjectUtils.isEmpty(o = JSONUtil.toBean(JSONUtil.toJsonStr(map.get(id)),InterfaceInfo.class))) {
+            log.info("o:" + o);
             o = getById(id);
             if (ObjectUtil.isNull(o)) {
                 throw new BusinessException(ResponseStatus.NOT_FOUND);
@@ -260,6 +262,7 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
 
             stringRedisTemplate.opsForHash().put(INTERFACE_PREFIX, String.valueOf(id), JSONUtil.toJsonStr(o));
         }
+        log.info(result);
         return result;
     }
 
@@ -274,7 +277,7 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
         }
         User user = userService.getLoginUser(request);
         QueryWrapper<UserInterfaceInfo> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("creator", user.getId());
+        queryWrapper.eq("user_id", user.getId());
         queryWrapper.eq("interface_info_id", interfaceInfo.getId());
         UserInterfaceInfo userInterfaceInfo = userInterfaceInfoService.getOne(queryWrapper);
         interfaceInfo.setLeftNum(userInterfaceInfo.getLeftNum());

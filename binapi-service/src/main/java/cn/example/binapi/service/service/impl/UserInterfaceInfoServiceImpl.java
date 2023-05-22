@@ -111,7 +111,7 @@ public class UserInterfaceInfoServiceImpl extends ServiceImpl<UserInterfaceInfoM
                 // 如果用户没有该接口，则新增一条数据
                 if (!flag) {
                     UserInterfaceInfo newUserInterface = new UserInterfaceInfo();
-                    newUserInterface.setCreator(userId);
+                    newUserInterface.setUserId(userId);
                     newUserInterface.setInterfaceInfoId(interfaceInfo.getId());
                     newUserInterface.setLeftNum(20);
                     newUserInterfaces.add(newUserInterface);
@@ -139,7 +139,6 @@ public class UserInterfaceInfoServiceImpl extends ServiceImpl<UserInterfaceInfoM
         }
     }
 
-
     @Override
     public void validUserInterfaceInfo(UserInterfaceInfo userInterfaceInfo, boolean add) {
         if (userInterfaceInfo == null) {
@@ -147,14 +146,13 @@ public class UserInterfaceInfoServiceImpl extends ServiceImpl<UserInterfaceInfoM
         }
         // 创建时，所有参数必须非空
         if (add) {
-            if (userInterfaceInfo.getInterfaceInfoId() <= 0 || userInterfaceInfo.getCreator() <= 0) {
+            if (userInterfaceInfo.getInterfaceInfoId() <= 0 || userInterfaceInfo.getUserId() <= 0) {
                 throw new BusinessException(ResponseStatus.PARAMS_ERROR, "接口或用户不存在");
             }
         }
-
         QueryWrapper<UserInterfaceInfo> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("interface_info_id", userInterfaceInfo.getInterfaceInfoId());
-        queryWrapper.eq("creator", userInterfaceInfo.getCreator());
+        queryWrapper.eq("user_id", userInterfaceInfo.getUserId());
         UserInterfaceInfo one = this.getOne(queryWrapper);
 
         if (userInterfaceInfo.getLeftNum() <= 0) {
@@ -166,20 +164,20 @@ public class UserInterfaceInfoServiceImpl extends ServiceImpl<UserInterfaceInfoM
      * 接口调用次数+1
      *
      * @param interfaceInfoId 接口信息ID
-     * @param creator 用户ID
+     * @param userId 用户ID
      * @return boolean
      */
     @Override
     @Transactional
-    public boolean invokeCount(long interfaceInfoId, long creator) {
+    public boolean invokeCount(long interfaceInfoId, long userId) {
         // 判断参数是否合法
-        if (interfaceInfoId <= 0 || creator <= 0) {
+        if (interfaceInfoId <= 0 || userId <= 0) {
             throw new BusinessException(ResponseStatus.PARAMS_ERROR);
         }
         // 根据ID获取接口信息对象
         QueryWrapper<UserInterfaceInfo> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("interface_info_id", interfaceInfoId);
-        queryWrapper.eq("creator", creator);
+        queryWrapper.eq("user_id", userId);
         UserInterfaceInfo userInterfaceInfo = this.getOne(queryWrapper);
         if (ObjectUtil.isNull(userInterfaceInfo)) {
             throw new BusinessException(ResponseStatus.NOT_FOUND, ResponseText.INTERFACE_EMPTY.getText());
@@ -192,7 +190,7 @@ public class UserInterfaceInfoServiceImpl extends ServiceImpl<UserInterfaceInfoM
         // TODO：这里最好不要直接操作数据库，要考虑高并发多流量场景，可以使用原子类缓存加锁设计业务场景
         UpdateWrapper<UserInterfaceInfo> updateWrapper = new UpdateWrapper<>();
         updateWrapper.eq("interface_info_id", interfaceInfoId);
-        updateWrapper.eq("creator", creator);
+        updateWrapper.eq("user_id", userId);
         updateWrapper.setSql("left_num = left_num - 1, total_num = total_num + 1");
         // 执行更新操作
         return this.update(updateWrapper);
@@ -200,19 +198,16 @@ public class UserInterfaceInfoServiceImpl extends ServiceImpl<UserInterfaceInfoM
 
     @Override
     @Transactional
-    public IPage<InterfaceInfo> getAvailableInterfaceInfo(InterfaceInfoQueryRequest interfaceInfoQueryRequest, long creator) {
-        if (creator == 0) {
+    public IPage<InterfaceInfo> getAvailableInterfaceInfo(InterfaceInfoQueryRequest interfaceInfoQueryRequest, long userId) {
+        if (userId == 0) {
             throw new BusinessException(ResponseStatus.PARAMS_ERROR);
         }
-
         long current = interfaceInfoQueryRequest.getCurrent();
         long size = interfaceInfoQueryRequest.getPageSize();
-
         // 限制爬虫
         if (size > 50) {
             throw new BusinessException(ResponseStatus.PARAMS_ERROR);
         }
-
         PageRequest pageRequest = new PageRequest();
         pageRequest.setCurrent(current);
         pageRequest.setPageSize(size);
@@ -222,6 +217,6 @@ public class UserInterfaceInfoServiceImpl extends ServiceImpl<UserInterfaceInfoM
         Page<InterfaceInfo> page = new Page<>(current, size);
         QueryWrapper<InterfaceInfo> wrapper = new QueryWrapper<>();
 
-        return interfaceInfoMapper.getInterfaceInfoByUserId(page, creator, wrapper);
+        return interfaceInfoMapper.getInterfaceInfoByUserId(page, userId, wrapper);
     }
 }

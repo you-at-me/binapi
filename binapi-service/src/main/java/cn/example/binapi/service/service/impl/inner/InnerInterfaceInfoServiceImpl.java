@@ -42,13 +42,13 @@ public class InnerInterfaceInfoServiceImpl implements InnerInterfaceInfoService 
     }
 
     @Override
-    public boolean hasCount(Long interfaceId, Long creator) {
-        if (interfaceId <= 0 || creator <= 0) {
+    public boolean hasLeftNum(Long interfaceId, Long userId) {
+        if (interfaceId <= 0 || userId <= 0) {
             throw new BusinessException(ResponseStatus.PARAMS_ERROR);
         }
 
         QueryWrapper<UserInterfaceInfo> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("interface_info_id", interfaceId).eq("creator", creator).gt("left_num", 0);
+        queryWrapper.eq("interface_info_id", interfaceId).eq("user_id", userId).gt("left_num", 0);
         UserInterfaceInfo userInterfaceInfo = userInterfaceInfoService.getOne(queryWrapper);
 
         return !ObjectUtil.isNull(userInterfaceInfo);

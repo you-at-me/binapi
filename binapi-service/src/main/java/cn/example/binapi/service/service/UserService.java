@@ -1,6 +1,8 @@
 package cn.example.binapi.service.service;
 
 
+import cn.example.binapi.common.model.dto.user.UserAddRequest;
+import cn.example.binapi.common.model.dto.user.UserUpdateRequest;
 import cn.example.binapi.common.model.entity.User;
 import com.baomidou.mybatisplus.extension.service.IService;
 
@@ -35,6 +37,16 @@ public interface UserService extends IService<User> {
      * 获取当前登录用户
      */
     User getLoginUser(HttpServletRequest request);
+
+    /**
+     * 管理员添加用户
+     */
+    long add(UserAddRequest userAddRequest);
+
+    /**
+     * 更新用户
+     */
+    boolean updateUser(UserUpdateRequest userUpdateRequest);
 
     /**
      * 是否为管理员

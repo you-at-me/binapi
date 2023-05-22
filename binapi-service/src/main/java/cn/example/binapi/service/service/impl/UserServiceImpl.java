@@ -1,6 +1,8 @@
 package cn.example.binapi.service.service.impl;
 
 import cn.example.binapi.common.constant.UserConstant;
+import cn.example.binapi.common.model.dto.user.UserAddRequest;
+import cn.example.binapi.common.model.dto.user.UserUpdateRequest;
 import cn.example.binapi.common.model.entity.User;
 import cn.example.binapi.service.common.ResponseStatus;
 import cn.example.binapi.service.common.ResponseText;
@@ -14,8 +16,10 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
+import org.springframework.util.ObjectUtils;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -24,6 +28,7 @@ import java.util.Objects;
 import static cn.example.binapi.common.constant.CommonConstant.SALT;
 import static cn.example.binapi.common.constant.UserConstant.USER_LOGIN_STATE;
 import static cn.example.binapi.service.common.ResponseStatus.PARAMS_ERROR;
+import static cn.example.binapi.service.common.ResponseText.*;
 
 
 /**
@@ -43,10 +48,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             throw new BusinessException(PARAMS_ERROR, ResponseText.PARAMS_EMPTY.getText());
         }
         if (account.length() < 4) {
-            throw new BusinessException(ResponseStatus.PARAMS_ERROR, ResponseText.ACCOUNT_SHORT.getText());
+            throw new BusinessException(ResponseStatus.PARAMS_ERROR, ACCOUNT_SHORT.getText());
         }
         if (account.length() > 16) {
-            throw new BusinessException(ResponseStatus.PARAMS_ERROR, ResponseText.ACCOUNT_LONG.getText());
+            throw new BusinessException(ResponseStatus.PARAMS_ERROR, ACCOUNT_LONG.getText());
         }
         if (password.length() < 6 || checkPassword.length() < 6) {
             throw new BusinessException(ResponseStatus.PARAMS_ERROR, "用户密码过短");
@@ -58,7 +63,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (!password.equals(checkPassword)) {
             throw new BusinessException(PARAMS_ERROR, "两次输入的密码不一致");
         }
-
         // 账户不能重复
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("account", account);
@@ -133,6 +137,70 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
         request.getSession().setAttribute(USER_LOGIN_STATE, currentUser);
         return currentUser;
+    }
+
+    @Override
+    public long add(UserAddRequest userAddRequest) {
+        if (ObjectUtils.isEmpty(userAddRequest)) {
+            throw new BusinessException(ResponseStatus.PARAMS_ERROR);
+        }
+        // 1. 数据校验
+        String account = userAddRequest.getAccount();
+        String password = userAddRequest.getPassword();
+        if (account.length() < 4) {
+            throw new BusinessException(PARAMS_ERROR, ACCOUNT_SHORT.getText());
+        }
+        if (account.length() > 16) {
+            throw new BusinessException(PARAMS_ERROR, ACCOUNT_LONG.getText());
+        }
+        if (password.length() < 6) {
+            throw new BusinessException(PARAMS_ERROR, PASSWORD_SHORT.getText());
+        }
+        if (password.length() > 20) {
+            throw new BusinessException(PARAMS_ERROR, PASSWORD_LONG.getText());
+        }
+        User user = new User();
+        // 2. 加密，使用 MD5 对密码加盐加密
+        String encryptPassword = DigestUtils.md5DigestAsHex((SALT + password).getBytes());
+        // 3. 分配accessKey、secretKey
+        String accessKey = DigestUtil.md5Hex(SALT + account + RandomUtil.randomNumbers(4));
+        String secretKey = DigestUtil.md5Hex(SALT + account + RandomUtil.randomNumbers(8));
+        BeanUtils.copyProperties(userAddRequest, user);
+        user.setPassword(encryptPassword);
+        user.setAccessKey(accessKey);
+        user.setSecretKey(secretKey);
+        boolean result = save(user);
+        if (!result) {
+            throw new BusinessException(ResponseStatus.OPERATION_ERROR);
+        }
+        return user.getId();
+    }
+
+    @Override
+    public boolean updateUser(UserUpdateRequest userUpdateRequest) {
+        if (ObjectUtil.isEmpty(userUpdateRequest)) {
+            throw new BusinessException(ResponseStatus.PARAMS_ERROR);
+        }
+        String account = userUpdateRequest.getAccount();
+        if (account.length() < 4) {
+            throw new BusinessException(PARAMS_ERROR, ACCOUNT_SHORT.getText());
+        }
+        if (account.length() > 16) {
+            throw new BusinessException(PARAMS_ERROR, ACCOUNT_LONG.getText());
+        }
+        String password = userUpdateRequest.getPassword();
+        User user = getById(userUpdateRequest.getId());
+        if (ObjectUtil.isNull(user)) {
+            throw new BusinessException(PARAMS_ERROR, USER_NOT_EXIST.getText());
+        }
+        String encryptPassword = DigestUtils.md5DigestAsHex((SALT + password).getBytes());
+        User u = new User();
+        BeanUtils.copyProperties(userUpdateRequest, u);
+        if (!user.getPassword().equals(encryptPassword)) {
+            u.setPassword(encryptPassword);
+        }
+        u.setPassword(user.getPassword());
+        return updateById(u);
     }
 
     /**
