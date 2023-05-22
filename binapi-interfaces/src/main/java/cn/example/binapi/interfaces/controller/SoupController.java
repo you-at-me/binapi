@@ -21,4 +21,5 @@ public class SoupController {
     public String randomSoulSoup(Object object) {
         return soulSoupService.getRandom();
     }
+
 }
