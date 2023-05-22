@@ -15,5 +15,5 @@ public interface InnerInterfaceInfoService {
     /**
      * 查询用户是否还有调用次数
      */
-    boolean hasCount(Long interfaceId, Long creator);
+    boolean hasLeftNum(Long interfaceId, Long userId);
 }
