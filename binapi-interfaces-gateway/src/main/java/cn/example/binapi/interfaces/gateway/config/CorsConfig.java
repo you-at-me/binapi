@@ -1,4 +1,4 @@
-package cn.example.binapi.gateway.config;
+package cn.example.binapi.interfaces.gateway.config;
 
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.context.annotation.Bean;
@@ -21,6 +21,7 @@ public class CorsConfig {
         // 1、配置跨域
         corsConfiguration.addAllowedHeader("*");
         corsConfiguration.addAllowedMethod("*");
+        // corsConfiguration.addAllowedOrigin("http://127.0.0.1:9999");
         corsConfiguration.addAllowedOriginPattern("*");
         corsConfiguration.setAllowCredentials(true);
         source.registerCorsConfiguration("/**", corsConfiguration);

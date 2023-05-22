@@ -1,4 +1,4 @@
-package cn.example.binapi.gateway.config;
+package cn.example.binapi.interfaces.gateway.config;
 
 
 import cn.example.binapi.common.model.entity.User;
@@ -68,13 +68,13 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
         String path = INTERFACE_HOST + request.getPath().value();
         String method = Objects.requireNonNull(request.getMethod()).toString();
         log.info("请求唯一标识：" + request.getId());
-        log.info("请求路径：" + path);
+        log.info("请求路径：" + path); // http://localhost:9000/interfaces/name
         log.info("请求方法：" + method);
-        log.info("请求参数：" + request.getQueryParams());
+        log.info("请求参数：" + request.getQueryParams()); // 请求参数：{name=[loves]}
         String sourceAddress = Objects.requireNonNull(request.getLocalAddress()).getHostString();
-        log.info("请求来源地址：" + sourceAddress);
+        log.info("请求来源地址：" + sourceAddress); // 请求来源地址：127.0.0.1
         log.info("请求方法1：" + method);
-        log.info("请求来源地址：" + request.getRemoteAddress());
+        log.info("请求来源地址2：" + request.getRemoteAddress()); // /127.0.0.1:61878
         log.info("请求方法2：" + method);
         ServerHttpResponse response = exchange.getResponse();
         log.info("请求方法3：" + method);
@@ -131,7 +131,7 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
         Instant currentInstant = Instant.now();
         Instant requestInstant = Instant.ofEpochSecond(Long.parseLong(Objects.requireNonNull(timeSecond)));
         Duration duration = Duration.between(requestInstant, currentInstant);
-        final Duration FIVE_MINUTES_DURATION = Duration.ofMinutes(5);
+        final Duration FIVE_MINUTES_DURATION = Duration.ofSeconds(5);
         if (duration.compareTo(FIVE_MINUTES_DURATION) >= 0) {
             log.error("EXIT at timeSecond");
             return handleNoAuth(response);
@@ -143,9 +143,10 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
             log.error("EXIT at sign");
             return handleNoAuth(response);
         }
+        // TODO 判断用户是否有操作该接口的权利，是从用户接口信息表当中查询，此表是当用户购买了对应的接口获得权限才可以调用该接口
         // 5. 查询用户是否还有调用次数
-        boolean hasCount = innerInterfaceInfoService.hasCount(Long.parseLong(interfaceId), Long.parseLong(userId));
-        if (!hasCount) {
+        boolean hasLeftNum = innerInterfaceInfoService.hasLeftNum(Long.parseLong(interfaceId), Long.parseLong(userId));
+        if (!hasLeftNum) {
             // 调用次数不足
             log.error("EXIT at insufficient count");
             response.setStatusCode(HttpStatus.FORBIDDEN);
@@ -191,7 +192,7 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
                         Flux<? extends DataBuffer> fluxBody = Flux.from(body);
                         // 往返回值里写数据，拼接字符串
                         return super.writeWith(fluxBody.map(dataBuffer -> {
-                            // 7. 调用成功，接口调用次数 + 1 invokeCount
+                            // 7. 调用成功，用户操作此次接口的调用次数 + 1 invokeCount, 且不需要对接口信息表的接口剩余调用次数和总调用次数进行更改，因为用户能够调用该接口的次数在一开始购买接口，存入用户接口信息表的时候就被分配了。
                             try {
                                 boolean b = innerUserInterfaceInfoService.invokeCount(interfaceId, userId);
                                 log.info("<-------修改接口调用次数：{}", b ? "成功" : "失败");

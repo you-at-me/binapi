@@ -1,4 +1,4 @@
-package cn.example.binapi.gateway;
+package cn.example.binapi.interfaces.gateway;
 
 import org.apache.dubbo.config.spring.context.annotation.EnableDubbo;
 import org.springframework.boot.SpringApplication;
@@ -10,8 +10,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  */
 @EnableDubbo
 @SpringBootApplication
-public class BinApiGatewayApplication {
+public class InterfacesGatewayApplication {
     public static void main(String[] args) {
-        SpringApplication.run(BinApiGatewayApplication.class, args);
+        SpringApplication.run(InterfacesGatewayApplication.class, args);
     }
 }
