@@ -1,4 +1,4 @@
-package cn.example.binapi.interfaces.util;
+package cn.example.binapi.interfaces.context;
 
 import cn.hutool.core.util.StrUtil;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -15,7 +15,7 @@ import static cn.example.binapi.common.constant.CommonConstant.APPID;
  * @author Carl
  */
 @Component
-public class AuthUtils {
+public class MainServiceAuthentication {
 
     @Resource
     private StringRedisTemplate stringRedisTemplate;

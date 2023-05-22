@@ -24,7 +24,7 @@ public class InterfaceInfoInvokeRequest implements Serializable {
     private String requestParams;
 
     /**
-     * 请求接口地址
+     * 请求要调用的接口地址
      */
     private String url;
 

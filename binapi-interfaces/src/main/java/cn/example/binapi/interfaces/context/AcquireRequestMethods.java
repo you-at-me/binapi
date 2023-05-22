@@ -1,4 +1,4 @@
-package cn.example.binapi.interfaces.util;
+package cn.example.binapi.interfaces.context;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
@@ -19,7 +19,7 @@ import static cn.example.binapi.common.constant.CommonConstant.DASH;
 
 @Slf4j
 @Component
-public class AcquireRequestMethodsUtils extends WebApplicationObjectSupport {
+public class AcquireRequestMethods extends WebApplicationObjectSupport {
 
     public Map<String, String> requestMappingMap = new HashMap<>();
 
