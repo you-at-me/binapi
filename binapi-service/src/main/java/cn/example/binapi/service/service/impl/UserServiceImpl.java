@@ -126,6 +126,21 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     /**
+     * 用户注销
+     */
+    @Override
+    public boolean userLogout(HttpServletRequest request) {
+        if (ObjectUtil.isEmpty(request)) {
+            throw new BusinessException(ResponseStatus.PARAMS_ERROR);
+        }
+        if (request.getSession().getAttribute(USER_LOGIN_STATE) == null) {
+            throw new BusinessException(ResponseStatus.OPERATION_ERROR, ResponseStatus.NOT_LOGIN.getMessage());
+        }
+        request.getSession().removeAttribute(USER_LOGIN_STATE);
+        return true;
+    }
+
+    /**
      * 获取当前登录用户
      */
     @Override
@@ -140,7 +155,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
-    public long add(UserAddRequest userAddRequest) {
+    public long addUser(UserAddRequest userAddRequest) {
         if (ObjectUtils.isEmpty(userAddRequest)) {
             throw new BusinessException(ResponseStatus.PARAMS_ERROR);
         }
@@ -188,11 +203,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (account.length() > 16) {
             throw new BusinessException(PARAMS_ERROR, ACCOUNT_LONG.getText());
         }
-        String password = userUpdateRequest.getPassword();
         User user = getById(userUpdateRequest.getId());
         if (ObjectUtil.isNull(user)) {
             throw new BusinessException(PARAMS_ERROR, USER_NOT_EXIST.getText());
         }
+        String password = userUpdateRequest.getPassword();
         String encryptPassword = DigestUtils.md5DigestAsHex((SALT + password).getBytes());
         User u = new User();
         BeanUtils.copyProperties(userUpdateRequest, u);
@@ -211,18 +226,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         // 仅管理员可查询
         User user = (User) request.getSession().getAttribute(USER_LOGIN_STATE);
         return user == null || !UserConstant.ADMIN_ROLE.equals(user.getRole());
-    }
-
-    /**
-     * 用户注销
-     */
-    @Override
-    public boolean userLogout(HttpServletRequest request) {
-        if (request.getSession().getAttribute(USER_LOGIN_STATE) == null) {
-            throw new BusinessException(ResponseStatus.OPERATION_ERROR, ResponseStatus.NOT_LOGIN.getMessage());
-        }
-        request.getSession().removeAttribute(USER_LOGIN_STATE);
-        return true;
     }
 
     @Override

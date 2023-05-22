@@ -34,6 +34,11 @@ public interface UserService extends IService<User> {
     User userLogin(String account, String password, HttpServletRequest request);
 
     /**
+     * 用户注销
+     */
+    boolean userLogout(HttpServletRequest request);
+
+    /**
      * 获取当前登录用户
      */
     User getLoginUser(HttpServletRequest request);
@@ -41,7 +46,7 @@ public interface UserService extends IService<User> {
     /**
      * 管理员添加用户
      */
-    long add(UserAddRequest userAddRequest);
+    long addUser(UserAddRequest userAddRequest);
 
     /**
      * 更新用户
@@ -52,11 +57,6 @@ public interface UserService extends IService<User> {
      * 是否为管理员
      */
     boolean isNotAdmin(HttpServletRequest request);
-
-    /**
-     * 用户注销
-     */
-    boolean userLogout(HttpServletRequest request);
 
     /**
      * 获取github+gitee star数

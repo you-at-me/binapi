@@ -1,7 +1,9 @@
 package cn.example.binapi.service.service.impl;
 
 import cn.example.binapi.common.common.InterfaceIdRequest;
+import cn.example.binapi.common.common.InterfacePurchaseRequest;
 import cn.example.binapi.common.constant.CommonConstant;
+import cn.example.binapi.common.constant.UserConstant;
 import cn.example.binapi.common.model.dto.interfaceinfo.InterfaceInfoAddRequest;
 import cn.example.binapi.common.model.dto.interfaceinfo.InterfaceInfoInvokeRequest;
 import cn.example.binapi.common.model.dto.interfaceinfo.InterfaceInfoQueryRequest;
@@ -20,9 +22,11 @@ import cn.example.binapi.service.service.InterfaceInfoService;
 import cn.example.binapi.service.service.UserInterfaceInfoService;
 import cn.example.binapi.service.service.UserService;
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
@@ -30,17 +34,20 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ObjectUtils;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import static cn.example.binapi.common.constant.CommonConstant.APPID;
+import static cn.example.binapi.common.constant.CommonConstant.APPID_EXPIRE;
 import static cn.example.binapi.common.constant.RedisConstant.INTERFACE_PREFIX;
+import static cn.example.binapi.common.constant.UserConstant.USER_LOGIN_STATE;
+import static cn.example.binapi.service.common.ResponseText.*;
 
 /**
  * 接口信息表实现类
@@ -69,10 +76,8 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
             throw new BusinessException(ResponseStatus.PARAMS_ERROR);
         }
         String name = interfaceInfo.getName();
-        if (b) {
-            if (StringUtils.isAnyBlank(name)) {
-                throw new BusinessException(ResponseStatus.PARAMS_ERROR);
-            }
+        if (b && StringUtils.isAnyBlank(name)) {
+            throw new BusinessException(ResponseStatus.PARAMS_ERROR);
         }
         if (StringUtils.isNotBlank(name) && name.length() > 50) {
             throw new BusinessException(ResponseStatus.PARAMS_ERROR, "名称过长");
@@ -80,6 +85,7 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
     }
 
     @Override
+    @Transactional
     public long addInterfaceInfo(InterfaceInfoAddRequest interfaceInfoAddRequest, HttpServletRequest request) {
         if (Objects.isNull(interfaceInfoAddRequest)) {
             throw new BusinessException(ResponseStatus.PARAMS_ERROR);
@@ -101,6 +107,7 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
     }
 
     @Override
+    @Transactional
     public boolean deleteInterfaceInfo(long id, HttpServletRequest request) {
         if (ObjectUtil.isEmpty(id) || id <= 0) {
             throw new BusinessException(ResponseStatus.PARAMS_ERROR);
@@ -125,26 +132,33 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
     }
 
     @Override
+    @Transactional
     public boolean updateInterfaceInfo(InterfaceInfoUpdateRequest interfaceInfoUpdateRequest, HttpServletRequest request) {
         if (interfaceInfoUpdateRequest == null || interfaceInfoUpdateRequest.getId() <= 0) {
             throw new BusinessException(ResponseStatus.PARAMS_ERROR);
+        }
+        long id = interfaceInfoUpdateRequest.getId();
+        // 判断是否存在
+        InterfaceInfo o = getById(id);
+        if (Objects.isNull(o)) {
+            throw new BusinessException(ResponseStatus.NOT_FOUND);
+        }
+        User user = userService.getLoginUser(request);
+        // 仅本人或管理员可修改，更新操作不用更新缓存，只有接口被调用的时候再去构建缓存
+        if (!o.getUserId().equals(user.getId()) && userService.isNotAdmin(request)) {
+            throw new BusinessException(ResponseStatus.NO_AUTH);
         }
         InterfaceInfo interfaceInfo = new InterfaceInfo();
         BeanUtils.copyProperties(interfaceInfoUpdateRequest, interfaceInfo);
         // 参数校验
         validInterfaceInfo(interfaceInfo, false);
-        User user = userService.getLoginUser(request);
-        long id = interfaceInfoUpdateRequest.getId();
-        // 判断是否存在
-        InterfaceInfo oldInterfaceInfo = getById(id);
-        if (oldInterfaceInfo == null) {
-            throw new BusinessException(ResponseStatus.NOT_FOUND);
+
+        boolean res = updateById(interfaceInfo);
+        if (res) {
+            // 接口信息必须要及时更新，尤其接口的调用次数要实时
+            stringRedisTemplate.opsForHash().put(INTERFACE_PREFIX, String.valueOf(id), JSONUtil.toJsonStr(o));
         }
-        // 仅本人或管理员可修改，更新操作不用更新缓存，只有接口被调用的时候再去构建缓存
-        if (!oldInterfaceInfo.getUserId().equals(user.getId()) && userService.isNotAdmin(request)) {
-            throw new BusinessException(ResponseStatus.NO_AUTH);
-        }
-        return updateById(interfaceInfo);
+        return res;
     }
 
     @Override
@@ -152,22 +166,25 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
         if (ObjectUtil.isNull(idRequest) || idRequest.getId() <= 0) {
             throw new BusinessException(ResponseStatus.PARAMS_ERROR);
         }
-        // 判断接口是否存在
-        long id = idRequest.getId();
-        Object o = stringRedisTemplate.opsForHash().get(INTERFACE_PREFIX, String.valueOf(id));
-        InterfaceInfo oldInterfaceInfo = JSONUtil.toBean(JSONUtil.toJsonStr(o), InterfaceInfo.class);
-        if (ObjectUtils.isEmpty(oldInterfaceInfo)) { // 如果为空则从数据库当中查找
-            oldInterfaceInfo = getById(id);
+        Long id = idRequest.getId();
+        Object obj = stringRedisTemplate.opsForHash().get(INTERFACE_PREFIX, String.valueOf(id));
+        InterfaceInfo o = null;
+        if (!ObjectUtil.isEmpty(obj)) {
+            o = JSONUtil.toBean(JSONUtil.toJsonStr(obj), InterfaceInfo.class);
         }
-        if (Objects.isNull(oldInterfaceInfo)) {
-            throw new BusinessException(ResponseStatus.NOT_FOUND);
+        if (Objects.isNull(o)) o = getById(id);
+        if (ObjectUtil.isEmpty(o)) throw new BusinessException(ResponseStatus.PARAMS_ERROR);
+        // 仅本人或管理员可修改该接口的状态
+        User u = (User) request.getSession().getAttribute(USER_LOGIN_STATE);
+        if (!o.getUserId().equals(u.getId()) && userService.isNotAdmin(request)) {
+            throw new BusinessException(ResponseStatus.NO_AUTH);
         }
-        // 验证接口是否可以调用，修改为远程调用
-        String res = invokeInterface(idRequest, request);
-        if (StrUtil.isBlank(res)) {
-            throw new BusinessException(ResponseStatus.SYSTEM_ERROR, "接口验证失败");
+        // 验证接口是否可以被远程调用
+        String res = onlineInvokeInterface(idRequest, u);
+        if (INTERFACE_CALL_FAILED.getText().equals(res)) {
+            throw new BusinessException(ResponseStatus.SYSTEM_ERROR, INTERFACE_NOT_USED.getText());
         }
-        // 更新状态，进行发布，也就是将状态置为 1 , 仅本人或者管理员才可修改
+        // 更新状态，进行发布，也就是将状态置为 1
         InterfaceInfo newInterfaceInfo = new InterfaceInfo();
         newInterfaceInfo.setId(id);
         newInterfaceInfo.setStatus(InterfaceStateInfoEnum.ONLINE.getValue());
@@ -180,22 +197,51 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
         return result;
     }
 
+    private String onlineInvokeInterface(InterfaceInfoInvokeRequest idRequest, User u) {
+        String result = getRemoteResult(idRequest, u);
+        return StrUtil.isBlank(result) ? INTERFACE_CALL_FAILED.getText() : result;
+    }
+
+    private String getRemoteResult(InterfaceInfoInvokeRequest request, User u) {
+        StringBuilder requestParams = new StringBuilder(); // 防止trim报npe
+        if (request.getRequestParams() != null) {
+            requestParams = new StringBuilder(request.getRequestParams().trim());
+        }
+        String method = request.getMethod();
+        String url = request.getUrl();
+        if (StringUtils.isAnyBlank(method, url)) {
+            throw new BusinessException(ResponseStatus.PARAMS_ERROR);
+        }
+        Api api = new Api();
+        api.setInterfaceId(String.valueOf(request.getId()));
+        api.setId(u.getId());
+        api.setAccount(u.getAccount());
+        api.setBody(requestParams);
+        api.setUrl(url);
+        api.setMethod(method);
+        Integer appId = RandomUtil.randomInt(10000);
+        stringRedisTemplate.opsForValue().set(APPID, String.valueOf(appId));
+        stringRedisTemplate.expire(APPID, APPID_EXPIRE, TimeUnit.SECONDS);
+        // Remote call, passing in the current user to obtain the corresponding universal identifier and secret key
+        RemoteCallClient remoteCallClient = new RemoteCallClient(appId, u.getAccessKey(), u.getSecretKey());
+        return remoteCallClient.getResult(api);
+    }
+
     @Override
     public Boolean offlineInterfaceInfo(InterfaceIdRequest idRequest) {
-
         if (Objects.isNull(idRequest) || idRequest.getId() == 0) {
             throw new BusinessException(ResponseStatus.PARAMS_ERROR);
         }
         long id = idRequest.getId();
-        Object o = stringRedisTemplate.opsForHash().get(INTERFACE_PREFIX, id);
-        InterfaceInfo oldInterfaceInfo = JSONUtil.toBean(JSONUtil.toJsonStr(o), InterfaceInfo.class);
-        if (Objects.isNull(oldInterfaceInfo)) {
-            oldInterfaceInfo = getById(id);
-            if (ObjectUtil.isEmpty(oldInterfaceInfo)) {
+        Object obj = stringRedisTemplate.opsForHash().get(INTERFACE_PREFIX, id);
+        InterfaceInfo o = JSONUtil.toBean(JSONUtil.toJsonStr(obj), InterfaceInfo.class);
+        if (Objects.isNull(o)) {
+            o = getById(id);
+            if (ObjectUtil.isEmpty(o)) {
                 throw new BusinessException(ResponseStatus.NOT_FOUND);
             }
         }
-        // 更新接口状态
+        // update interface status
         InterfaceInfo newInterfaceInfo = new InterfaceInfo();
         newInterfaceInfo.setId(id);
         newInterfaceInfo.setStatus(InterfaceStateInfoEnum.OFFLINE.getValue());
@@ -208,60 +254,73 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
     }
 
     @Override
-    public String invokeInterface(InterfaceInfoInvokeRequest interfaceInfoInvokeRequest, HttpServletRequest request) {
-        if (interfaceInfoInvokeRequest == null || interfaceInfoInvokeRequest.getId() == 0) {
+    public String purchaseInterface(InterfacePurchaseRequest interfacePurchaseRequest, HttpServletRequest request) {
+        User u = (User) request.getSession().getAttribute(USER_LOGIN_STATE);
+        UpdateWrapper<InterfaceInfo> updateWrapper = new UpdateWrapper<>();
+        Long interfaceId = interfacePurchaseRequest.getId();
+        InterfaceInfo interfaceInfo = getById(interfaceId);
+        if (ObjectUtil.isEmpty(interfaceInfo)) {
             throw new BusinessException(ResponseStatus.PARAMS_ERROR);
         }
-        StringBuilder requestParams = new StringBuilder(); // 防止trim报npe
-        if (interfaceInfoInvokeRequest.getRequestParams() != null) {
-            requestParams = new StringBuilder(interfaceInfoInvokeRequest.getRequestParams().trim());
+        Long userId = u.getId();
+        int purchaseNum = interfacePurchaseRequest.getPurchaseNum();
+        updateWrapper.eq("id", interfaceId);
+        updateWrapper.eq("user_id", userId);
+        updateWrapper.setSql("left_num = left_num - " + purchaseNum);
+        // TODO Calculate the total price of the interface, then pay, and the deduction can only be called after the response is successful
+        boolean update = update(updateWrapper);
+        boolean save = false;
+        if (update) {
+            UserInterfaceInfo o = new UserInterfaceInfo();
+            o.setUserId(userId);
+            o.setInterfaceInfoId(interfaceId);
+            o.setLeftNum(purchaseNum);
+            o.setStatus(interfaceInfo.getStatus());
+            save = userInterfaceInfoService.save(o);
         }
-        String method = interfaceInfoInvokeRequest.getMethod();
-        String url = interfaceInfoInvokeRequest.getUrl();
-        log.info("invoke...requestParams: {}", requestParams);
-        log.info("invoke...method: {}", method);
-        log.info("invoke...url: {}", url);
-        // 判断接口是否存在，首先从缓存当中获取
+        if (!save && update) {
+            UpdateWrapper<InterfaceInfo> wrapper = new UpdateWrapper<>();
+            wrapper.eq("id", interfaceId);
+            wrapper.eq("user_id", userId);
+            wrapper.setSql("left_num = left_num + " + purchaseNum);
+            update = false;
+            while (!update) { // Use loops to solve the following database update problems
+                update = update(updateWrapper); // Tips:What to do if the update fails here？
+            }
+        }
+        return update && save ? INTERFACE_PURCHASE_SUCCESS.getText() : INTERFACE_PURCHASE_FAILED.getText();
+    }
+
+    @Override
+    public String invokeInterface(InterfaceInfoInvokeRequest interfaceInfoInvokeRequest, HttpServletRequest request) {
+        if (Objects.isNull(interfaceInfoInvokeRequest) || interfaceInfoInvokeRequest.getId() <= 0) {
+            throw new BusinessException(ResponseStatus.PARAMS_ERROR);
+        }
+        // To determine whether the interface exists, first obtain it from the cache
         Map<Object, Object> map = stringRedisTemplate.opsForHash().entries(INTERFACE_PREFIX);
         log.info("map::" + map);
         InterfaceInfo o = null;
+        Object m;
         long id = interfaceInfoInvokeRequest.getId();
-        if (ObjectUtil.isEmpty(map) || ObjectUtils.isEmpty(o = JSONUtil.toBean(JSONUtil.toJsonStr(map.get(id)),InterfaceInfo.class))) {
+        if (ObjectUtil.isEmpty(map) || Objects.isNull(m = map.get(id)) || ObjectUtils.isEmpty(o = JSONUtil.toBean(JSONUtil.toJsonStr(m), InterfaceInfo.class))) {
             log.info("o:" + o);
             o = getById(id);
-            if (ObjectUtil.isNull(o)) {
-                throw new BusinessException(ResponseStatus.NOT_FOUND);
-            }
+            if (ObjectUtil.isNull(o)) throw new BusinessException(ResponseStatus.NOT_FOUND);
             String interfaceJson = JSONUtil.toJsonStr(o);
             stringRedisTemplate.opsForHash().put(INTERFACE_PREFIX, String.valueOf(id), interfaceJson);
         }
         if (o.getStatus() == InterfaceStateInfoEnum.OFFLINE.getValue()) {
-            throw new BusinessException(ResponseStatus.SYSTEM_ERROR, "接口已关闭");
+            throw new BusinessException(ResponseStatus.SYSTEM_ERROR, INTERFACE_CLOSURE.getText());
         }
-        if (StringUtils.isAnyBlank(method, url)) {
-            throw new BusinessException(ResponseStatus.PARAMS_ERROR);
-        }
-        User loginUser = userService.getLoginUser(request);//接口调用，首先获取当前用户
-        System.out.println(loginUser);
-        String accessKey = loginUser.getAccessKey(); //获得对应的通用标识符
-        String secretKey = loginUser.getSecretKey(); //获得秘钥
-
-        Api api = new Api();
-        api.setInterfaceId(String.valueOf(id));
-        api.setId(loginUser.getId());
-        api.setAccount(loginUser.getAccount());
-        api.setBody(requestParams);
-        api.setUrl(url);
-        api.setMethod(method);
-
-        Integer appId = 123; // TODO appid
-        RemoteCallClient remoteCallClient = new RemoteCallClient(appId, accessKey, secretKey);
-        String result = remoteCallClient.getResult(api);
-        if (StrUtil.isNotBlank(result)) {
-            // 在接口被成功调用的时候先对调用次数做统计，然后更新缓存，即使缓存已存在直接覆盖即可
-
-            stringRedisTemplate.opsForHash().put(INTERFACE_PREFIX, String.valueOf(id), JSONUtil.toJsonStr(o));
-        }
+        User user = userService.getLoginUser(request);
+        String result = getRemoteResult(interfaceInfoInvokeRequest, user);
+        if (StrUtil.isBlank(result)) return INTERFACE_CALL_FAILED.getText();
+        // 在接口被成功调用的时候，远程接口网关已经对调用次数做统计了，这里只更新缓存直接覆盖即可。
+        QueryWrapper<UserInterfaceInfo> queryWrapper = new QueryWrapper<>(); // TODO 可单独开启一个线程去执行
+        queryWrapper.eq("user_id", user.getId());
+        queryWrapper.eq("interface_info_id", id);
+        UserInterfaceInfo u = userInterfaceInfoService.getOne(queryWrapper);
+        stringRedisTemplate.opsForHash().put(INTERFACE_PREFIX, String.valueOf(id), JSONUtil.toJsonStr(u));
         log.info(result);
         return result;
     }
@@ -271,24 +330,27 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
         if (ObjectUtil.isEmpty(id)) {
             throw new BusinessException(ResponseStatus.PARAMS_ERROR);
         }
-        InterfaceInfo interfaceInfo = getById(id);
-        if (interfaceInfo == null || interfaceInfo.getId() == null || interfaceInfo.getId() <= 0) {
+        InterfaceInfo o = getById(id);
+        if (ObjectUtil.isEmpty(o)) {
             throw new BusinessException(ResponseStatus.NOT_FOUND);
         }
-        User user = userService.getLoginUser(request);
-        QueryWrapper<UserInterfaceInfo> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("user_id", user.getId());
-        queryWrapper.eq("interface_info_id", interfaceInfo.getId());
-        UserInterfaceInfo userInterfaceInfo = userInterfaceInfoService.getOne(queryWrapper);
-        interfaceInfo.setLeftNum(userInterfaceInfo.getLeftNum());
-        return getById(id);
+        return o;
     }
 
     @Override
-    public List<InterfaceInfo> listInterfaceInfo(InterfaceInfoQueryRequest interfaceInfoQueryRequest) {
+    public List<InterfaceInfo> listInterfaceInfo(InterfaceInfoQueryRequest interfaceInfoQueryRequest, HttpServletRequest request) {
         InterfaceInfo interfaceInfoQuery = new InterfaceInfo();
-        if (interfaceInfoQueryRequest != null) {
+        if (!ObjectUtil.isEmpty(interfaceInfoQueryRequest)) {
             BeanUtils.copyProperties(interfaceInfoQueryRequest, interfaceInfoQuery);
+        }
+        User u = (User) request.getSession().getAttribute(USER_LOGIN_STATE);
+        if (u.getRole().equals(UserConstant.DEFAULT_ROLE)) {
+            QueryWrapper<UserInterfaceInfo> queryWrapper = new QueryWrapper<>();
+            queryWrapper.eq("user_id", u.getId());
+            List<UserInterfaceInfo> userInterfaceInfos = userInterfaceInfoService.list(queryWrapper);
+            List<InterfaceInfo> res = new ArrayList<>();
+            userInterfaceInfos.forEach(ui -> res.add(getById(ui.getInterfaceInfoId())));
+            return res;
         }
         // 先尝试通过 hashmap 从缓存中获取，查询不到则从数据库当中查找
         List<Object> interfaceInfoLists = stringRedisTemplate.opsForHash().values(INTERFACE_PREFIX);

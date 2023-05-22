@@ -1,6 +1,7 @@
 package cn.example.binapi.service.service;
 
 import cn.example.binapi.common.common.InterfaceIdRequest;
+import cn.example.binapi.common.common.InterfacePurchaseRequest;
 import cn.example.binapi.common.model.dto.interfaceinfo.InterfaceInfoAddRequest;
 import cn.example.binapi.common.model.dto.interfaceinfo.InterfaceInfoInvokeRequest;
 import cn.example.binapi.common.model.dto.interfaceinfo.InterfaceInfoQueryRequest;
@@ -26,17 +27,19 @@ public interface InterfaceInfoService extends IService<InterfaceInfo> {
 
     boolean deleteInterfaceInfo(long id, HttpServletRequest request);
 
-    boolean updateInterfaceInfo(InterfaceInfoUpdateRequest interfaceInfoUpdateRequest, HttpServletRequest request);
+    boolean updateInterfaceInfo(InterfaceInfoUpdateRequest interfaceInfoUpdateRequest, HttpServletRequest r);
 
     Boolean onlineInterfaceInfo(InterfaceInfoInvokeRequest idRequest, HttpServletRequest request);
 
     Boolean offlineInterfaceInfo(InterfaceIdRequest idRequest);
 
+    String purchaseInterface(InterfacePurchaseRequest interfacePurchaseRequest, HttpServletRequest request);
+
     String invokeInterface(InterfaceInfoInvokeRequest interfaceInfoInvokeRequest, HttpServletRequest request);
 
     InterfaceInfo getInterfaceInfoById(long id, HttpServletRequest request);
 
-    List<InterfaceInfo> listInterfaceInfo(InterfaceInfoQueryRequest interfaceInfoQueryRequest);
+    List<InterfaceInfo> listInterfaceInfo(InterfaceInfoQueryRequest queryRequest, HttpServletRequest request);
 
     Page<InterfaceInfo> interfaceInfoService(InterfaceInfoQueryRequest interfaceInfoQueryRequest);
 
