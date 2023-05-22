@@ -59,6 +59,7 @@ public class AuthUtils {
         map.put("timeSecond", request.getHeader("timeSecond"));
         map.put("nonce", request.getHeader("nonce"));
         map.put("sign", request.getHeader("sign"));
+        System.out.println("interfaces: map::" + map);
         return map;
     }
 }

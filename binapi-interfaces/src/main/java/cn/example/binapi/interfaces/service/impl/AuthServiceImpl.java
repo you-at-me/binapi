@@ -16,6 +16,9 @@ import javax.servlet.http.HttpServletRequest;
 import java.lang.reflect.Method;
 import java.util.Map;
 
+import static cn.example.binapi.common.constant.CommonConstant.DASH;
+import static cn.example.binapi.sdk.constant.RequestConstant.REGEX_STR;
+
 @Slf4j
 @Service
 public class AuthServiceImpl extends ServiceImpl<AuthMapper, Auth> implements AuthService {
@@ -35,11 +38,11 @@ public class AuthServiceImpl extends ServiceImpl<AuthMapper, Auth> implements Au
         // 验证请求参数和密钥等是否合法
         boolean isAuth = authUtils.isAuth(headers);
         if (isAuth) { // 接口有权限调用时，则改为根据实际请求的测试地址来进行调用，而并非写死
-            // 1、获取当前请求路径中的类名和方法
+            // 1、获取当前服务请求映射路径中的所有请求访问类名和方法，都是以短路径url地址，例如：/main
             Map<String, String> requestMappingMap = acquire.requestMappingMap;
             String url = headers.get("url");
-            System.out.println("url::" + url);
-            String key = "[" + url + "]";
+            String[] urlSplit = url.split(REGEX_STR);
+            String key = "[" + urlSplit[urlSplit.length - 1] + "]";
             String typeAndMethod = requestMappingMap.get(key);
             log.info("url: {}", url);
             log.info("key: {}", key);
@@ -48,20 +51,20 @@ public class AuthServiceImpl extends ServiceImpl<AuthMapper, Auth> implements Au
                 log.error("AuthService...res is null");
                 return null;
             }
-            String[] split = typeAndMethod.split("-");
-            Object body;
+            String[] split = typeAndMethod.split(DASH);
+            Object res;
             try {
                 // 通过反射构造
                 Class<?> forName = Class.forName(split[0]);
                 // 由于是object对象，所以实例化对象需要从容器中拿到
                 Method classMethod = forName.getMethod(split[1], Object.class);
                 log.info("classMethod: {}", classMethod);
-                // 调用执行方法
-                body = classMethod.invoke(context.getBean(forName), headers.get("body"));
+                // 调用执行对应的请求映射路径方法
+                res = classMethod.invoke(context.getBean(forName), headers.get("body"));
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
-            return String.valueOf(body);
+            return String.valueOf(res);
         }
         return null;
     }

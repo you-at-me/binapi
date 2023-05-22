@@ -15,6 +15,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import static cn.example.binapi.common.constant.CommonConstant.DASH;
+
 @Slf4j
 @Component
 public class AcquireRequestMethodsUtils extends WebApplicationObjectSupport {
@@ -44,7 +46,7 @@ public class AcquireRequestMethodsUtils extends WebApplicationObjectSupport {
             // 3、获取方法
             String method = handlerMethod.getMethod().getName();
             System.out.println(patterns);
-            requestMappingMap.put(patterns.toString(), type + "-" + method);
+            requestMappingMap.put(patterns.toString(), type + DASH + method);
         }
         log.info("requestMappingMap: {}", requestMappingMap.toString());
     }
