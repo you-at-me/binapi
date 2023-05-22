@@ -24,6 +24,11 @@ public enum ResponseText {
 
 
     INTERFACE_EMPTY("接口不存在"),
+    INTERFACE_CLOSURE("接口已关闭"),
+    INTERFACE_PURCHASE_SUCCESS("接口购买成功"),
+    INTERFACE_PURCHASE_FAILED("接口购买失败"),
+    INTERFACE_NOT_USED("接口不可用"),
+    INTERFACE_CALL_FAILED("接口远程调用失败"),
     INTERFACE_NOT_FULL("接口调用次数不足");
 
 
