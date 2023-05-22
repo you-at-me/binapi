@@ -29,7 +29,7 @@ public class Knife4jConfig {
                         .build())
                 .select()
                 // 指定 Controller 扫描包路径
-                .apis(RequestHandlerSelectors.basePackage("cn.example.binapi.cn.example.binapi.service.controller"))
+                .apis(RequestHandlerSelectors.basePackage("cn.example.binapi.service.controller"))
                 .paths(PathSelectors.any())
                 .build();
     }

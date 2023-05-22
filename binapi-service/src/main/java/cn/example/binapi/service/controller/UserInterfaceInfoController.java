@@ -74,7 +74,7 @@ public class UserInterfaceInfoController {
         // 校验
         userInterfaceInfoService.validUserInterfaceInfo(userInterfaceInfo, true);
         User loginUser = userService.getLoginUser(request);
-        userInterfaceInfo.setCreator(loginUser.getId());
+        userInterfaceInfo.setUserId(loginUser.getId());
         boolean result = userInterfaceInfoService.save(userInterfaceInfo);
         if (!result) {
             throw new BusinessException(ResponseStatus.OPERATION_ERROR);
@@ -102,7 +102,7 @@ public class UserInterfaceInfoController {
             throw new BusinessException(ResponseStatus.NOT_FOUND);
         }
         // 仅本人或管理员可删除
-        if (!oldUserInterfaceInfo.getCreator().equals(user.getId()) && userService.isNotAdmin(request)) {
+        if (!oldUserInterfaceInfo.getUserId().equals(user.getId()) && userService.isNotAdmin(request)) {
             throw new BusinessException(ResponseStatus.NO_AUTH);
         }
         boolean b = userInterfaceInfoService.removeById(id);
@@ -132,7 +132,7 @@ public class UserInterfaceInfoController {
             throw new BusinessException(ResponseStatus.NOT_FOUND);
         }
         // 仅本人或管理员可修改
-        if (!oldUserInterfaceInfo.getCreator().equals(user.getId()) && userService.isNotAdmin(request)) {
+        if (!oldUserInterfaceInfo.getUserId().equals(user.getId()) && userService.isNotAdmin(request)) {
             throw new BusinessException(ResponseStatus.NO_AUTH);
         }
         boolean result = userInterfaceInfoService.updateById(userInterfaceInfo);

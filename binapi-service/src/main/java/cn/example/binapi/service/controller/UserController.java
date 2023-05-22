@@ -1,5 +1,6 @@
 package cn.example.binapi.service.controller;
 
+import cn.example.binapi.common.constant.UserConstant;
 import cn.example.binapi.common.model.dto.user.*;
 import cn.example.binapi.common.model.entity.User;
 import cn.example.binapi.common.model.vo.UserVO;
@@ -101,27 +102,20 @@ public class UserController {
     // region 增删改查
 
     /**
-     * 创建用户
+     * 管理员创建用户
      */
     @PostMapping("add")
-    @AuthCheck(mustRole = "admin") // 只有管理员才能创建用户
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE) // 只有管理员才能创建用户
     public BaseResponse<Long> addUser(@RequestBody UserAddRequest userAddRequest) {
-        if (ObjectUtils.isEmpty(userAddRequest)) {
-            throw new BusinessException(ResponseStatus.PARAMS_ERROR);
-        }
-        User user = new User();
-        BeanUtils.copyProperties(userAddRequest, user);
-        boolean result = userService.save(user);
-        if (!result) {
-            throw new BusinessException(ResponseStatus.OPERATION_ERROR);
-        }
-        return ResultUtils.success(user.getId());
+        long userId = userService.add(userAddRequest);
+        return ResultUtils.success(userId);
     }
 
     /**
      * 删除用户
      */
     @PostMapping("/delete/{id}")
+    @AuthCheck
     public BaseResponse<Boolean> deleteUser(@PathVariable("id") long id) {
         if (ObjectUtils.isEmpty(id) || id <= 0) {
             throw new BusinessException(ResponseStatus.PARAMS_ERROR);
@@ -134,13 +128,9 @@ public class UserController {
      * 更新用户
      */
     @PostMapping("update")
+    @AuthCheck
     public BaseResponse<Boolean> updateUser(@RequestBody UserUpdateRequest userUpdateRequest) {
-        if (userUpdateRequest == null || userUpdateRequest.getId() == null) {
-            throw new BusinessException(ResponseStatus.PARAMS_ERROR);
-        }
-        User user = new User();
-        BeanUtils.copyProperties(userUpdateRequest, user);
-        boolean result = userService.updateById(user);
+        boolean result = userService.updateUser(userUpdateRequest);
         return ResultUtils.success(result);
     }
 
@@ -148,6 +138,7 @@ public class UserController {
      * 根据 id 获取用户
      */
     @GetMapping("/get/{id}")
+    @AuthCheck
     public BaseResponse<UserVO> getUserById(@PathVariable("id") long id) {
         if (ObjectUtil.isEmpty(id) || id <= 0) {
             throw new BusinessException(ResponseStatus.PARAMS_ERROR);
@@ -162,6 +153,7 @@ public class UserController {
      * 获取用户列表
      */
     @GetMapping("/list")
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     public BaseResponse<List<UserVO>> listUser(UserQueryRequest userQueryRequest) {
         User userQuery = new User();
         if (userQueryRequest != null) {
@@ -181,6 +173,7 @@ public class UserController {
      * 分页获取用户列表
      */
     @GetMapping("/list/page")
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     public BaseResponse<Page<UserVO>> listUserByPage(UserQueryRequest userQueryRequest, @RequestParam(value = "current", required = false, defaultValue = "0") long current, @RequestParam(value = "size", required = false, defaultValue = "10") long size) {
         User userQuery = new User();
         if (userQueryRequest != null) {
