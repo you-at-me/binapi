@@ -202,18 +202,18 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
         return StrUtil.isBlank(result) ? INTERFACE_CALL_FAILED.getText() : result;
     }
 
-    private String getRemoteResult(InterfaceInfoInvokeRequest request, User u) {
+    private String getRemoteResult(InterfaceInfoInvokeRequest infoRequest, User u) {
         StringBuilder requestParams = new StringBuilder(); // 防止trim报npe
-        if (request.getRequestParams() != null) {
-            requestParams = new StringBuilder(request.getRequestParams().trim());
+        if (infoRequest.getRequestParams() != null) {
+            requestParams = new StringBuilder(infoRequest.getRequestParams().trim());
         }
-        String method = request.getMethod();
-        String url = request.getUrl();
+        String method = infoRequest.getMethod();
+        String url = infoRequest.getUrl();
         if (StringUtils.isAnyBlank(method, url)) {
             throw new BusinessException(ResponseStatus.PARAMS_ERROR);
         }
         Api api = new Api();
-        api.setInterfaceId(String.valueOf(request.getId()));
+        api.setInterfaceId(String.valueOf(infoRequest.getId()));
         api.setId(u.getId());
         api.setAccount(u.getAccount());
         api.setBody(requestParams);

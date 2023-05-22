@@ -32,7 +32,7 @@ public class OneWordController {
         return HttpRequest.get(REQUEST_REDIRECT_URL).charset(CharsetUtil.UTF_8).body(JSONUtil.toJsonStr(ow)).execute().body();
     }
 
-    @GetMapping()
+    @GetMapping("get")
     public String randomSoulSoup(Object o) {
         log.info((String) o);
         // OneWord ow = new OneWord();

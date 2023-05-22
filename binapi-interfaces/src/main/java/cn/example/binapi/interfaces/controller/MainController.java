@@ -1,6 +1,6 @@
 package cn.example.binapi.interfaces.controller;
 
-import cn.example.binapi.interfaces.service.AuthService;
+import cn.example.binapi.interfaces.service.MainService;
 import cn.hutool.core.util.StrUtil;
 import com.sun.org.apache.xalan.internal.xsltc.runtime.Constants;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +15,7 @@ import javax.servlet.http.HttpServletRequest;
 public class MainController {
 
     @Resource
-    private AuthService authService;
+    private MainService mainService;
 
     /**
      * 请求转发
@@ -23,7 +23,7 @@ public class MainController {
     @RequestMapping("main")
     public String mainRedirect(HttpServletRequest request, String type) {
         log.info("mainRedirect...." + type);
-        String res = authService.mainRedirect(request);
+        String res = mainService.mainRedirect(request);
         return StrUtil.isBlank(res) ? Constants.EMPTYSTRING : res;
     }
 
