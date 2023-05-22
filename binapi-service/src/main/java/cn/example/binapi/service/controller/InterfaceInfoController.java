@@ -1,6 +1,7 @@
 package cn.example.binapi.service.controller;
 
 import cn.example.binapi.common.common.InterfaceIdRequest;
+import cn.example.binapi.common.common.InterfacePurchaseRequest;
 import cn.example.binapi.common.constant.UserConstant;
 import cn.example.binapi.common.model.dto.interfaceinfo.InterfaceInfoAddRequest;
 import cn.example.binapi.common.model.dto.interfaceinfo.InterfaceInfoInvokeRequest;
@@ -42,7 +43,7 @@ public class InterfaceInfoController {
     }
 
     /**
-     * 删除
+     * 删除接口
      */
     @PostMapping("/delete/{id}")
     public BaseResponse<Boolean> deleteInterfaceInfo(@PathVariable("id") long id, HttpServletRequest request) {
@@ -50,7 +51,7 @@ public class InterfaceInfoController {
     }
 
     /**
-     * 更新
+     * 更新接口
      */
     @PostMapping("update")
     public BaseResponse<Boolean> updateInterfaceInfo(@RequestBody InterfaceInfoUpdateRequest interfaceInfoUpdateRequest, HttpServletRequest request) {
@@ -61,7 +62,6 @@ public class InterfaceInfoController {
      * 上线接口
      */
     @PostMapping("online")
-    @AuthCheck(mustRole = "admin")
     public BaseResponse<Boolean> onlineInterfaceInfo(@RequestBody InterfaceInfoInvokeRequest idRequest, HttpServletRequest request) {
         return ResultUtils.success(interfaceInfoService.onlineInterfaceInfo(idRequest, request));
     }
@@ -70,9 +70,17 @@ public class InterfaceInfoController {
      * 下线接口
      */
     @PostMapping("offline")
-    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     public BaseResponse<Boolean> offlineInterfaceInfo(@RequestBody InterfaceIdRequest idRequest) {
         return ResultUtils.success(interfaceInfoService.offlineInterfaceInfo(idRequest));
+    }
+
+    /**
+     * 接口购买，确定购买次数，给某个用户分配某条接口的权限
+     */
+    @GetMapping("purchase")
+    public BaseResponse<String> purchaseInterface(@RequestBody InterfacePurchaseRequest interfacePurchaseRequest, HttpServletRequest request) {
+        String res = interfaceInfoService.purchaseInterface(interfacePurchaseRequest, request);
+        return ResultUtils.success(res);
     }
 
     /**
@@ -80,12 +88,12 @@ public class InterfaceInfoController {
      */
     @PostMapping("invoke")
     public BaseResponse<Object> invokeInterface(@RequestBody InterfaceInfoInvokeRequest interfaceInfoInvokeRequest, HttpServletRequest request) {
-        String result =  interfaceInfoService.invokeInterface(interfaceInfoInvokeRequest, request);
+        String result = interfaceInfoService.invokeInterface(interfaceInfoInvokeRequest, request);
         return ResultUtils.success(result);
     }
 
     /**
-     * 根据 id 获取接口的详细信息
+     * 根据ID获取接口的详细信息
      */
     @GetMapping("/get/{id}")
     public BaseResponse<InterfaceInfo> getInterfaceInfoById(@PathVariable long id, HttpServletRequest request) {
@@ -93,12 +101,12 @@ public class InterfaceInfoController {
     }
 
     /**
-     * 获取列表（仅管理员可使用）
+     * 根据用户身份获取接口列表信息
      */
-    @AuthCheck(mustRole = "admin") // 必须是管理员权限才能通过
-    @GetMapping("/list")
-    public BaseResponse<List<InterfaceInfo>> listInterfaceInfo(InterfaceInfoQueryRequest interfaceInfoQueryRequest) {
-        return ResultUtils.success(interfaceInfoService.listInterfaceInfo(interfaceInfoQueryRequest));
+    @GetMapping("list")
+    @AuthCheck(anyRole = {UserConstant.ADMIN_ROLE, UserConstant.DEFAULT_ROLE})
+    public BaseResponse<List<InterfaceInfo>> listInterfaceInfo(InterfaceInfoQueryRequest interfaceInfoQueryRequest, HttpServletRequest r) {
+        return ResultUtils.success(interfaceInfoService.listInterfaceInfo(interfaceInfoQueryRequest, r));
     }
 
     /**
@@ -110,13 +118,13 @@ public class InterfaceInfoController {
     }
 
     @GetMapping("/getInterfaceCount")
-    public BaseResponse<Integer> getInterfaceCount(HttpServletRequest request) {
+    public BaseResponse<Integer> getInterfaceCount() {
         Integer count = Math.toIntExact(interfaceInfoService.count());
         return ResultUtils.success(count);
     }
 
     @GetMapping("/getInterfaceInvokeCount")
-    public BaseResponse<List<InterfaceInfoVO>> getInterfaceInvokeCount(HttpServletRequest request) {
+    public BaseResponse<List<InterfaceInfoVO>> getInterfaceInvokeCount() {
         List<InterfaceInfoVO> list = interfaceInfoService.getInterfaceInfoTotalInvokeCount();
         return ResultUtils.success(list);
     }

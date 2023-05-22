@@ -79,9 +79,6 @@ public class UserController {
      */
     @PostMapping("logout")
     public BaseResponse<Boolean> userLogout(HttpServletRequest request) {
-        if (request == null) {
-            throw new BusinessException(ResponseStatus.PARAMS_ERROR);
-        }
         boolean result = userService.userLogout(request);
         return ResultUtils.success(result);
     }
@@ -89,7 +86,7 @@ public class UserController {
     /**
      * 获取当前登录用户
      */
-    @GetMapping("/get/login")
+    @GetMapping("getLoginUser")
     public BaseResponse<UserVO> getLoginUser(HttpServletRequest request) {
         User user = userService.getLoginUser(request);
         UserVO userVO = new UserVO();
@@ -104,17 +101,17 @@ public class UserController {
     /**
      * 管理员创建用户
      */
-    @PostMapping("add")
+    @PostMapping("addUser")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE) // 只有管理员才能创建用户
     public BaseResponse<Long> addUser(@RequestBody UserAddRequest userAddRequest) {
-        long userId = userService.add(userAddRequest);
+        long userId = userService.addUser(userAddRequest);
         return ResultUtils.success(userId);
     }
 
     /**
      * 删除用户
      */
-    @PostMapping("/delete/{id}")
+    @PostMapping("/deleteUser/{id}")
     @AuthCheck
     public BaseResponse<Boolean> deleteUser(@PathVariable("id") long id) {
         if (ObjectUtils.isEmpty(id) || id <= 0) {
@@ -127,7 +124,7 @@ public class UserController {
     /**
      * 更新用户
      */
-    @PostMapping("update")
+    @PostMapping("updateUser")
     @AuthCheck
     public BaseResponse<Boolean> updateUser(@RequestBody UserUpdateRequest userUpdateRequest) {
         boolean result = userService.updateUser(userUpdateRequest);
@@ -137,7 +134,7 @@ public class UserController {
     /**
      * 根据 id 获取用户
      */
-    @GetMapping("/get/{id}")
+    @GetMapping("/getUser/{id}")
     @AuthCheck
     public BaseResponse<UserVO> getUserById(@PathVariable("id") long id) {
         if (ObjectUtil.isEmpty(id) || id <= 0) {
@@ -152,7 +149,7 @@ public class UserController {
     /**
      * 获取用户列表
      */
-    @GetMapping("/list")
+    @GetMapping("listUser")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     public BaseResponse<List<UserVO>> listUser(UserQueryRequest userQueryRequest) {
         User userQuery = new User();
@@ -172,9 +169,9 @@ public class UserController {
     /**
      * 分页获取用户列表
      */
-    @GetMapping("/list/page")
+    @GetMapping("listUserPages")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
-    public BaseResponse<Page<UserVO>> listUserByPage(UserQueryRequest userQueryRequest, @RequestParam(value = "current", required = false, defaultValue = "0") long current, @RequestParam(value = "size", required = false, defaultValue = "10") long size) {
+    public BaseResponse<Page<UserVO>> listUserPages(UserQueryRequest userQueryRequest, @RequestParam(value = "current", required = false, defaultValue = "0") long current, @RequestParam(value = "size", required = false, defaultValue = "10") long size) {
         User userQuery = new User();
         if (userQueryRequest != null) {
             BeanUtils.copyProperties(userQueryRequest, userQuery);

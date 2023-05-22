@@ -1,8 +1,8 @@
 package cn.example.binapi.service.controller;
 
 
-import cn.example.binapi.common.common.DeleteRequest;
 import cn.example.binapi.common.constant.CommonConstant;
+import cn.example.binapi.common.constant.UserConstant;
 import cn.example.binapi.common.model.dto.interfaceinfo.InterfaceInfoQueryRequest;
 import cn.example.binapi.common.model.dto.userInterfaceInfo.UserInterfaceInfoAddRequest;
 import cn.example.binapi.common.model.dto.userInterfaceInfo.UserInterfaceInfoQueryRequest;
@@ -33,10 +33,10 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import static cn.example.binapi.common.constant.RedisConstant.USER_INTERFACE_PREFIX;
+import static cn.example.binapi.service.common.ResponseText.USER_NOT_EXIST;
 
 
 @RestController
@@ -60,109 +60,35 @@ public class UserInterfaceInfoController {
     @Resource
     private RedisTemplate redisTemplate;
 
-    /**
-     * 创建
-     */
     @PostMapping("add")
-    @AuthCheck(mustRole = "admin")
     public BaseResponse<Long> addUserInterfaceInfo(@RequestBody UserInterfaceInfoAddRequest userInterfaceInfoAddRequest, HttpServletRequest request) {
-        if (userInterfaceInfoAddRequest == null) {
-            throw new BusinessException(ResponseStatus.PARAMS_ERROR);
-        }
-        UserInterfaceInfo userInterfaceInfo = new UserInterfaceInfo();
-        BeanUtils.copyProperties(userInterfaceInfoAddRequest, userInterfaceInfo);
-        // 校验
-        userInterfaceInfoService.validUserInterfaceInfo(userInterfaceInfo, true);
-        User loginUser = userService.getLoginUser(request);
-        userInterfaceInfo.setUserId(loginUser.getId());
-        boolean result = userInterfaceInfoService.save(userInterfaceInfo);
-        if (!result) {
-            throw new BusinessException(ResponseStatus.OPERATION_ERROR);
-        }
-        long newUserInterfaceInfoId = userInterfaceInfo.getId();
-        Set keys = redisTemplate.keys(USER_INTERFACE_PREFIX + "*");
-        redisTemplate.delete(keys);
-        return ResultUtils.success(newUserInterfaceInfoId);
+        return ResultUtils.success(userInterfaceInfoService.addUserInterfaceInfo(userInterfaceInfoAddRequest, request));
     }
 
-    /**
-     * 删除
-     */
-    @PostMapping("/delete")
-    @AuthCheck(mustRole = "admin")
-    public BaseResponse<Boolean> deleteUserInterfaceInfo(@RequestBody DeleteRequest deleteRequest, HttpServletRequest request) {
-        if (deleteRequest == null || deleteRequest.getId() <= 0) {
-            throw new BusinessException(ResponseStatus.PARAMS_ERROR);
-        }
-        User user = userService.getLoginUser(request);
-        long id = deleteRequest.getId();
-        // 判断是否存在
-        UserInterfaceInfo oldUserInterfaceInfo = userInterfaceInfoService.getById(id);
-        if (oldUserInterfaceInfo == null) {
-            throw new BusinessException(ResponseStatus.NOT_FOUND);
-        }
-        // 仅本人或管理员可删除
-        if (!oldUserInterfaceInfo.getUserId().equals(user.getId()) && userService.isNotAdmin(request)) {
-            throw new BusinessException(ResponseStatus.NO_AUTH);
-        }
-        boolean b = userInterfaceInfoService.removeById(id);
-        Set keys = redisTemplate.keys(USER_INTERFACE_PREFIX + "*");
-        redisTemplate.delete(keys);
-        return ResultUtils.success(b);
+    @PostMapping("/delete/{id}")
+    public BaseResponse<Boolean> deleteUserInterfaceInfo(@PathVariable("id") long userInterfaceInfoId, HttpServletRequest request) {
+        return ResultUtils.success(userInterfaceInfoService.deleteUserInterfaceInfo(userInterfaceInfoId, request));
     }
 
-    /**
-     * 更新
-     */
-    @PostMapping("/update")
-    @AuthCheck(mustRole = "admin")
+    @PostMapping("update")
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     public BaseResponse<Boolean> updateUserInterfaceInfo(@RequestBody UserInterfaceInfoUpdateRequest userInterfaceInfoUpdateRequest, HttpServletRequest request) {
-        if (userInterfaceInfoUpdateRequest == null || userInterfaceInfoUpdateRequest.getId() <= 0) {
-            throw new BusinessException(ResponseStatus.PARAMS_ERROR);
-        }
-        UserInterfaceInfo userInterfaceInfo = new UserInterfaceInfo();
-        BeanUtils.copyProperties(userInterfaceInfoUpdateRequest, userInterfaceInfo);
-        // 参数校验
-        userInterfaceInfoService.validUserInterfaceInfo(userInterfaceInfo, false);
-        User user = userService.getLoginUser(request);
-        long id = userInterfaceInfoUpdateRequest.getId();
-        // 判断是否存在
-        UserInterfaceInfo oldUserInterfaceInfo = userInterfaceInfoService.getById(id);
-        if (oldUserInterfaceInfo == null) {
-            throw new BusinessException(ResponseStatus.NOT_FOUND);
-        }
-        // 仅本人或管理员可修改
-        if (!oldUserInterfaceInfo.getUserId().equals(user.getId()) && userService.isNotAdmin(request)) {
-            throw new BusinessException(ResponseStatus.NO_AUTH);
-        }
-        boolean result = userInterfaceInfoService.updateById(userInterfaceInfo);
-        Set keys = redisTemplate.keys(USER_INTERFACE_PREFIX + "*");
-        redisTemplate.delete(keys);
-        return ResultUtils.success(result);
+        return ResultUtils.success(userInterfaceInfoService.updateUserInterfaceInfo(userInterfaceInfoUpdateRequest, request));
     }
 
     /**
      * 根据 id 获取
      */
-    @GetMapping("/get")
-    public BaseResponse<UserInterfaceInfo> getUserInterfaceInfoById(long id) {
-        if (id <= 0) {
-            throw new BusinessException(ResponseStatus.PARAMS_ERROR);
-        }
-        UserInterfaceInfo userInterfaceInfo = (UserInterfaceInfo) redisTemplate.opsForValue().get(USER_INTERFACE_PREFIX + id);
-        if (userInterfaceInfo != null) {
-            return ResultUtils.success(userInterfaceInfo);
-        }
-        userInterfaceInfo = userInterfaceInfoService.getById(id);
-        redisTemplate.opsForValue().set(USER_INTERFACE_PREFIX + id, userInterfaceInfo, 60, TimeUnit.MINUTES);
-        return ResultUtils.success(userInterfaceInfo);
+    @GetMapping("/get/{id}")
+    public BaseResponse<UserInterfaceInfo> getUserInterfaceInfoById(@PathVariable("id") long id) {
+        return ResultUtils.success(userInterfaceInfoService.getUserInterfaceInfoById(id));
     }
 
-    @GetMapping("/available")
+    @GetMapping("available")
     public BaseResponse<IPage<InterfaceInfo>> getAvailableInterfaceInfo(InterfaceInfoQueryRequest interfaceInfoQueryRequest, HttpServletRequest request) {
         User loginUser = userService.getLoginUser(request);
         if (loginUser == null || loginUser.getId() == 0) {
-            throw new BusinessException(ResponseStatus.PARAMS_ERROR, "用户不存在");
+            throw new BusinessException(ResponseStatus.PARAMS_ERROR, USER_NOT_EXIST.getText());
         }
 
         IPage<InterfaceInfo> interfaceInfoIPage = (IPage<InterfaceInfo>) redisTemplate.opsForValue().get(USER_INTERFACE_PREFIX + interfaceInfoQueryRequest.toString());
@@ -174,6 +100,15 @@ public class UserInterfaceInfoController {
         interfaceInfoIPage = userInterfaceInfoService.getAvailableInterfaceInfo(interfaceInfoQueryRequest, userId);
         redisTemplate.opsForValue().set(USER_INTERFACE_PREFIX + interfaceInfoIPage.toString(), interfaceInfoIPage, 60, TimeUnit.MINUTES);
         return ResultUtils.success(interfaceInfoIPage);
+    }
+
+    /**
+     * 单个用户获取自己的接口列表信息
+     */
+    @GetMapping("/list/{id}")
+    public BaseResponse<List<UserInterfaceInfo>> listSingleUserInterfaceInfo(UserInterfaceInfoQueryRequest userInterfaceInfoQueryRequest, @PathVariable("id") long userId) {
+        // TODO 每个用户自己应该也可以查看自己购买的接口信息列表
+        return ResultUtils.success(null);
     }
 
     /**
@@ -229,7 +164,7 @@ public class UserInterfaceInfoController {
         return ResultUtils.success(userInterfaceInfoPage);
     }
 
-    @GetMapping("/getInvokeCount")
+    @GetMapping("getInvokeCount")
     public BaseResponse<Integer> getInvokeCount(HttpServletRequest request) {
         // 创建Wrapper对象
         QueryWrapper<UserInterfaceInfo> wrapper = new QueryWrapper<>();
