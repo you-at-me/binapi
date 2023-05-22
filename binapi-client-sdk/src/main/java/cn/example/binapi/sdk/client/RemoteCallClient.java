@@ -4,14 +4,20 @@ import cn.example.binapi.sdk.Model.Api;
 import cn.example.binapi.sdk.util.SignUtil;
 import cn.hutool.core.util.CharsetUtil;
 import cn.hutool.core.util.RandomUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpRequest;
+import cn.hutool.http.HttpResponse;
 import cn.hutool.json.JSONUtil;
 import com.sun.org.apache.xalan.internal.xsltc.runtime.Constants;
+import lombok.extern.slf4j.Slf4j;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
-import static cn.example.binapi.sdk.constant.RequestConstant.*;
+import static cn.example.binapi.sdk.constant.RequestConstant.REQUEST_REDIRECT_URL;
 
 /**
  * 远程调用第三方接口的客户端，这里的第三方接口目前
@@ -21,6 +27,7 @@ import static cn.example.binapi.sdk.constant.RequestConstant.*;
  * @since 2023-05-17
  */
 // @Data
+@Slf4j
 public class RemoteCallClient {
 
     private Integer appId;
@@ -42,20 +49,45 @@ public class RemoteCallClient {
     }
 
     public String getResult(Api api) {
-        String json = JSONUtil.toJsonStr(api.getBody()); //body就是请求参数
-        if (GET.equalsIgnoreCase(api.getMethod())) { // 所有的请求都通过main进行统一请求转发到各个接口进行调用，且是通过对应的路径映射进行调用的方法，而且还通过接口网关服务进行转发到main请求路径的，防止对外暴露接口
-            return makeRequest(HttpRequest.get(REQUEST_REDIRECT_URL), api, json).execute().body();
-        }
-        if (POST.equalsIgnoreCase(api.getMethod())) {
-            return makeRequest(HttpRequest.post(REQUEST_REDIRECT_URL), api, json).execute().body();
-        }
-        {
-            return Constants.EMPTYSTRING;
-        }
+        String jsonBody = JSONUtil.toJsonStr(api.getBody()); //body就是请求参数
+        // if (GET.equalsIgnoreCase(api.getMethod())) {
+        //     HttpResponse response = makeRequest(HttpRequest.get(REQUEST_REDIRECT_URL), api, json).execute();
+        //     String body = response.body();
+        //     if (response.isOk() && StrUtil.isNotBlank(body)) {
+        //         return body;
+        //     }
+        //     return Constants.EMPTYSTRING;
+        // }
+        // if (POST.equalsIgnoreCase(api.getMethod())) {
+        //     HttpResponse response = makeRequest(HttpRequest.post(REQUEST_REDIRECT_URL), api, json).execute();
+        //     return response.isOk() ? response.body() : Constants.EMPTYSTRING;
+        // }
+        // {
+        //     return Constants.EMPTYSTRING;
+        // }
+        // 所有的请求都通过main进行统一请求转发到各个接口进行调用，且是通过对应的路径映射进行调用的方法，而且还通过接口网关服务进行转发到main请求路径的，防止对外暴露接口
+        return invokeMethods(api.getMethod().toLowerCase(Locale.ROOT), api, jsonBody);
     }
 
-    private HttpRequest makeRequest(HttpRequest request, Api api, String json) {
-        return request.header("Accept", "application/json;charset=UTF-8").addHeaders(getHeaders(api.getUrl(), api.getInterfaceId(), json, api.getId(), api.getAccount())).charset(CharsetUtil.UTF_8).body(json);
+    private String invokeMethods(String methodName, Api api, String jsonBody) {
+        // Use reflection to get http request static method
+        try {
+            Method method = HttpRequest.class.getMethod(methodName, String.class);
+            HttpRequest httpRequest = (HttpRequest) method.invoke(null, REQUEST_REDIRECT_URL);
+            HttpResponse response = makeRequest(httpRequest, api, jsonBody);
+            String body = response.body();
+            if (response.isOk() && StrUtil.isNotBlank(body)) {
+                return body;
+            }
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+            // log.error("Method invoke error：{}", e.getMessage());
+            log.error("Method invoke error::", e);
+        }
+        return Constants.EMPTYSTRING;
+    }
+
+    private HttpResponse makeRequest(HttpRequest request, Api api, String jsonBody) {
+        return request.header("Accept", "application/json;charset=UTF-8").addHeaders(getHeaders(api.getUrl(), api.getInterfaceId(), jsonBody, api.getId(), api.getAccount())).charset(CharsetUtil.UTF_8).body(jsonBody).execute();
     }
 
     private Map<String, String> getHeaders(String url, String interfaceId, String body, Long userId, String account) {
