@@ -10,9 +10,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  */
 @SpringBootApplication
 @MapperScan("cn.example.binapi.interfaces.mapper")
-public class BinApiInterfacesApplication {
+public class InterfacesApplication {
     public static void main(String[] args) {
         System.out.println("Interfaces Application started...");
-        SpringApplication.run(BinApiInterfacesApplication.class, args);
+        SpringApplication.run(InterfacesApplication.class, args);
     }
 }

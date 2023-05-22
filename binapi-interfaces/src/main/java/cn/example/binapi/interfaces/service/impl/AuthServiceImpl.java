@@ -6,6 +6,7 @@ import cn.example.binapi.interfaces.mapper.AuthMapper;
 import cn.example.binapi.interfaces.service.AuthService;
 import cn.example.binapi.interfaces.util.AcquireRequestMethodsUtils;
 import cn.example.binapi.interfaces.util.AuthUtils;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationContext;
@@ -38,7 +39,7 @@ public class AuthServiceImpl extends ServiceImpl<AuthMapper, Auth> implements Au
         // 验证请求参数和密钥等是否合法
         boolean isAuth = authUtils.isAuth(headers);
         if (isAuth) { // 接口有权限调用时，则改为根据实际请求的测试地址来进行调用，而并非写死
-            // 1、获取当前服务请求映射路径中的所有请求访问类名和方法，都是以短路径url地址，例如：/main
+            // 1、获取当前服务请求映射路径中的所有请求访问类名和方法，都是以短路径url地址，例如：[/main]
             Map<String, String> requestMappingMap = acquire.requestMappingMap;
             String url = headers.get("url");
             String[] urlSplit = url.split(REGEX_STR);
@@ -47,7 +48,7 @@ public class AuthServiceImpl extends ServiceImpl<AuthMapper, Auth> implements Au
             log.info("url: {}", url);
             log.info("key: {}", key);
             log.info("res: {}", typeAndMethod);
-            if (typeAndMethod == null) {
+            if (StrUtil.isBlank(typeAndMethod)) {
                 log.error("AuthService...res is null");
                 return null;
             }

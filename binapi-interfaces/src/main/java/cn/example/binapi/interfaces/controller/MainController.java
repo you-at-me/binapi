@@ -1,6 +1,8 @@
 package cn.example.binapi.interfaces.controller;
 
 import cn.example.binapi.interfaces.service.AuthService;
+import cn.hutool.core.util.StrUtil;
+import com.sun.org.apache.xalan.internal.xsltc.runtime.Constants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -20,8 +22,9 @@ public class MainController {
      */
     @RequestMapping("main")
     public String mainRedirect(HttpServletRequest request, String type) {
-        log.info("nameRedirect...." + type);
-        return authService.mainRedirect(request);
+        log.info("mainRedirect...." + type);
+        String res = authService.mainRedirect(request);
+        return StrUtil.isBlank(res) ? Constants.EMPTYSTRING : res;
     }
 
 }

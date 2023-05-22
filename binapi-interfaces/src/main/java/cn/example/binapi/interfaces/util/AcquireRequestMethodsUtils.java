@@ -45,7 +45,7 @@ public class AcquireRequestMethodsUtils extends WebApplicationObjectSupport {
             String type = handlerMethod.getBeanType().getName();
             // 3、获取方法
             String method = handlerMethod.getMethod().getName();
-            System.out.println(patterns);
+            System.out.println("patterns::" + patterns);
             requestMappingMap.put(patterns.toString(), type + DASH + method);
         }
         log.info("requestMappingMap: {}", requestMappingMap.toString());
