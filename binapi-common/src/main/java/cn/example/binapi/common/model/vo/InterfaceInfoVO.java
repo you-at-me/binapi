@@ -77,7 +77,7 @@ public class InterfaceInfoVO implements Serializable {
     /**
      * 创建人
      */
-    private Long creator;
+    private Long userId;
 
     /**
      * 创建时间

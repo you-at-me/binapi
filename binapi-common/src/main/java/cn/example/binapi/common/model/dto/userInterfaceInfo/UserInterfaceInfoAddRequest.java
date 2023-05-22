@@ -14,7 +14,7 @@ public class UserInterfaceInfoAddRequest implements Serializable {
     /**
      * 调用用户 id
      */
-    private Long creator;
+    private Long userId;
 
     /**
      * 接口 id

@@ -20,9 +20,24 @@ public interface CommonConstant {
      */
     String SALT = "binapi";
 
-
     /**
      * 接口可用次数
      */
     String COUNT_EMPTY = "调用次数不足";
+
+    /**
+     * 请求头校验
+     */
+    String HEADER_NAME = "Binapi-Head";
+
+    /**
+     * 请求头值校验
+     */
+    String HEADER_VALUE = "But-Not-Yet";
+
+    /**
+     * 请求映射方法短横
+     */
+    String DASH = "-";
+
 }

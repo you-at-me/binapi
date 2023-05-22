@@ -22,7 +22,7 @@ public class UserInterfaceInfo implements Serializable {
     /**
      * 调用用户 id
      */
-    private Long creator;
+    private Long userId;
 
     /**
      * 接口 id
@@ -30,14 +30,14 @@ public class UserInterfaceInfo implements Serializable {
     private Long interfaceInfoId;
 
     /**
-     * 某条接口已经被调用的总调用次数
-     */
-    private Integer totalNum;
-
-    /**
-     * 某条接口的剩余能够被调用的次数
+     * 每个用户操作该接口还剩余的调用次数
      */
     private Integer leftNum;
+
+    /**
+     * 每个用户操作该接口的总调用次数
+     */
+    private Integer totalNum;
 
     /**
      * 0-禁用，1-正常

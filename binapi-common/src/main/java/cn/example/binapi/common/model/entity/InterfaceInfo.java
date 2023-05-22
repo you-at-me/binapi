@@ -66,6 +66,11 @@ public class InterfaceInfo implements Serializable {
     private Integer status;
 
     /**
+     * 创建人ID
+     */
+    private Long userId;
+
+    /**
      * 剩余次数
      */
     @TableField(exist = false)
@@ -76,11 +81,6 @@ public class InterfaceInfo implements Serializable {
      */
     @TableField(exist = false)
     private Integer totalNum;
-
-    /**
-     * 创建人
-     */
-    private Long creator;
 
     /**
      * 创建时间
