@@ -61,7 +61,6 @@ public class AuthInterceptor {
         if (Objects.isNull(user)) throw new BusinessException(ResponseStatus.NOT_LOGIN);
         if (ObjectUtil.isNotEmpty(authCheck)) {
             List<String> anyRole = Arrays.stream(authCheck.anyRole()).filter(StringUtils::isNotBlank).collect(Collectors.toList()); // 获取注解当中配置的用户权限
-            System.out.println(anyRole);
             String mustRole = authCheck.mustRole();
             // 某个必需角色必须得是当前请求用户对应的用户角色才能通过
             if (StringUtils.isNotBlank(mustRole)) {

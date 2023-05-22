@@ -30,7 +30,7 @@ public class UserInterfaceInfoAspect {
         //         }
         //     }
         // }
-        userInterfaceInfoService.addUserInterfaceInfo();
+        userInterfaceInfoService.initUserInterfaceInfo();
     }
 }
 
