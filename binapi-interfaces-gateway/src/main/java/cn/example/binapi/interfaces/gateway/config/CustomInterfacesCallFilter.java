@@ -8,6 +8,7 @@ import cn.example.binapi.common.service.inner.InnerUserService;
 import cn.example.binapi.sdk.util.SignUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
+import com.alibaba.nacos.api.utils.StringUtils;
 import com.alibaba.nacos.common.model.RestResult;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -46,7 +47,7 @@ import static cn.example.binapi.common.constant.CommonConstant.COUNT_EMPTY;
  */
 @Slf4j
 @Component
-public class CustomGlobalFilter implements GlobalFilter, Ordered {
+public class CustomInterfacesCallFilter implements GlobalFilter, Ordered {
 
     @DubboReference
     private InnerUserService innerUserService;
@@ -57,7 +58,7 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
     @DubboReference
     private InnerUserInterfaceInfoService innerUserInterfaceInfoService;
 
-    private static final List<String> IP_WHITE_LIST = Arrays.asList("127.0.0.1", "/service/apiclient", "/service/user/**", "/service/soulSoup/**");
+    private static final List<String> IP_WHITE_LIST = Arrays.asList("127.0.0.1", "/service/user/**", "/service/interfaceInfo/**", "/service/userInterfaceInfo/**");
 
     private static final String INTERFACE_HOST = "http://localhost:9000";
 
@@ -73,11 +74,8 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
         log.info("请求参数：" + request.getQueryParams()); // 请求参数：{name=[loves]}
         String sourceAddress = Objects.requireNonNull(request.getLocalAddress()).getHostString();
         log.info("请求来源地址：" + sourceAddress); // 请求来源地址：127.0.0.1
-        log.info("请求方法1：" + method);
         log.info("请求来源地址2：" + request.getRemoteAddress()); // /127.0.0.1:61878
-        log.info("请求方法2：" + method);
         ServerHttpResponse response = exchange.getResponse();
-        log.info("请求方法3：" + method);
         // 2. 网关统一访问控制 - 黑白名单
         if (!IP_WHITE_LIST.contains(sourceAddress)) {
             log.error("EXIT at whitelist");
@@ -87,28 +85,33 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
         // 3. 请求头校验
         HttpHeaders headers = request.getHeaders();
         log.info("headers" + headers);
-        String accessKey = headers.getFirst("accessKey");
-        log.info("accessKey: " + accessKey);
-        String nonce = headers.getFirst("nonce");
-        log.info("nonce: " + nonce);
-        String timeSecond = headers.getFirst("timeSecond");
-        log.info("timeSecond: " + timeSecond);
-        String sign = headers.getFirst("sign");
-        log.info("sign: " + sign);
-        String body = headers.getFirst("body");
-        log.info("body: " + body);
         String userId = headers.getFirst("userId");
         log.info("userId: " + userId);
+        String account = headers.getFirst("account");
+        log.info("account: " + account);
         String interfaceId = headers.getFirst("interfaceId");
         log.info("interfaceId: " + interfaceId);
+        String url = headers.getFirst("url");
+        log.info("url: " + url);
+        String appId = headers.getFirst("appId");
+        log.info("appId: " + appId);
+        String accessKey = headers.getFirst("accessKey");
+        log.info("accessKey: " + accessKey);
+        String body = headers.getFirst("body");
+        log.info("body: " + body);
+        String timeSecond = headers.getFirst("timeSecond");
+        log.info("timeSecond: " + timeSecond);
+        String nonce = headers.getFirst("nonce");
+        log.info("nonce: " + nonce);
+        String sign = headers.getFirst("sign");
+        log.info("sign: " + sign);
 
-        if (!StrUtil.isAllNotBlank(accessKey, userId, interfaceId)) {
+        if (!StrUtil.isAllNotBlank(accessKey, userId, interfaceId) || Objects.isNull(interfaceId) || Objects.isNull(userId)) {
             log.error("EXIT at authentication");
-            return handleInvokeError(response);
+            return handleNoAuth(response);
         }
-
-        if (interfaceId == null || interfaceId.trim().isEmpty() || userId == null || userId.trim().isEmpty()) { // This step seems to have been judged above
-            log.error("EXIT at interfaceId = {}, userId = {}", interfaceId, userId);
+        if (StrUtil.isBlank(sign) || StringUtils.isBlank(url) || url.trim().isEmpty()) {
+            log.error("EXIT at sign = {}, url = {}", sign, url);
             response.setStatusCode(HttpStatus.FORBIDDEN);
             return response.setComplete();
         }
@@ -117,6 +120,7 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
         try {
             invokeUser = innerUserService.getInvokeUser(accessKey);
         } catch (Exception e) {
+            // log.error("getInvokeUser error::{}", e.getMessage());
             log.error("getInvokeUser error", e);
         }
         if (ObjectUtil.isNull(invokeUser)) {
@@ -139,22 +143,21 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
         // genSign
         String secretKey = invokeUser.getSecretKey();
         String serverSign = SignUtil.genSign(body, secretKey);
-        if (ObjectUtil.isNull(sign) || !sign.equals(serverSign)) {
+        if (StrUtil.isBlank(sign) || !sign.equals(serverSign)) {
             log.error("EXIT at sign");
             return handleNoAuth(response);
         }
-        // TODO 判断用户是否有操作该接口的权利，是从用户接口信息表当中查询，此表是当用户购买了对应的接口获得权限才可以调用该接口
+        // 判断用户是否有操作该接口的权利，从用户接口信息表中查询，当用户购买了对应的接口获得权限才可调用该接口
         // 5. 查询用户是否还有调用次数
         boolean hasLeftNum = innerInterfaceInfoService.hasLeftNum(Long.parseLong(interfaceId), Long.parseLong(userId));
-        if (!hasLeftNum) {
-            // 调用次数不足
+        if (!hasLeftNum) { // 调用次数不足
             log.error("EXIT at insufficient count");
             response.setStatusCode(HttpStatus.FORBIDDEN);
             DataBufferFactory bufferFactory = response.bufferFactory();
             ObjectMapper objectMapper = new ObjectMapper();
             DataBuffer wrap;
             try {
-                wrap = bufferFactory.wrap(objectMapper.writeValueAsBytes(new RestResult<>(403, COUNT_EMPTY)));
+                wrap = bufferFactory.wrap(objectMapper.writeValueAsBytes(new RestResult<>(HttpStatus.FORBIDDEN.value(), COUNT_EMPTY)));
             } catch (JsonProcessingException e) {
                 throw new RuntimeException(e);
             }
@@ -197,6 +200,7 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
                                 boolean b = innerUserInterfaceInfoService.invokeCount(interfaceId, userId);
                                 log.info("<-------修改接口调用次数：{}", b ? "成功" : "失败");
                             } catch (Exception e) {
+                                // log.error("invokeCount error::{}", e.getMessage());
                                 log.error("invokeCount error", e);
                             }
                             byte[] content = new byte[dataBuffer.readableByteCount()];
