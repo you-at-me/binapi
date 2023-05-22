@@ -13,7 +13,7 @@ public interface CommonConstant {
     /**
      * 降序
      */
-    String SORT_ORDER_DESC = " descend";
+    String SORT_ORDER_DESC = "descend";
 
     /**
      * 盐值，混淆密码
@@ -39,5 +39,15 @@ public interface CommonConstant {
      * 请求映射方法短横
      */
     String DASH = "-";
+
+    /**
+     * appId
+     */
+    String APPID = "appId";
+
+    /**
+     * appId
+     */
+    Integer APPID_EXPIRE = 60;
 
 }

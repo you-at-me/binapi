@@ -15,5 +15,5 @@ public interface RedisConstant {
 
     String INTERFACE_PREFIX = "binapi:interface_info";
 
-    String USER_INTERFACE_PREFIX = "binapi:user_interface";
+    String USER_INTERFACE_PREFIX = "binapi:user_interface_info";
 }
