@@ -53,12 +53,12 @@ public class MainServiceImpl  implements MainService {
             Object res;
             try {
                 // 通过反射构造
-                Class<?> forName = Class.forName(split[0]);
+                Class<?> invokeClass = Class.forName(split[0]);
                 // 由于是object对象，所以实例化对象需要从容器中拿到
-                Method classMethod = forName.getMethod(split[1], Object.class);
+                Method classMethod = invokeClass.getMethod(split[1], Object.class);
                 log.info("classMethod: {}", classMethod);
                 // 调用执行对应的请求映射路径方法
-                res = classMethod.invoke(context.getBean(forName), headers.get("body"));
+                res = classMethod.invoke(context.getBean(invokeClass), headers.get("body"));
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
