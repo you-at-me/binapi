@@ -13,7 +13,7 @@ public interface InnerInterfaceInfoService {
     InterfaceInfo getInterfaceInfo(String path, String method);
 
     /**
-     * 查询用户是否还有调用次数
+     * 增加接口的总调用次数
      */
-    boolean hasLeftNum(Long interfaceId, Long userId);
+    boolean increaseTotalNum(long interfaceId);
 }

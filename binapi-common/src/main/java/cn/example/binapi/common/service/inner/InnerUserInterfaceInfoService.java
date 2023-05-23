@@ -6,7 +6,12 @@ package cn.example.binapi.common.service.inner;
 public interface InnerUserInterfaceInfoService {
 
     /**
-     * 调用接口统计
+     * 查询用户是否还有调用次数
+     */
+    boolean hasLeftNum(Long interfaceId, Long userId);
+
+    /**
+     * 调用接口统计，对调用次数+1,对剩余次数-1
      */
     boolean invokeCount(long interfaceInfoId, long userId);
 }

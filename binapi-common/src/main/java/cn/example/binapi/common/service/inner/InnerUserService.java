@@ -8,7 +8,7 @@ import cn.example.binapi.common.model.entity.User;
 public interface InnerUserService {
 
     /**
-     * 在数据库查询是否已分配给用户密钥
+     * 根据用户的通用标识符查询出对应的用户
      */
     User getInvokeUser(String accessKey);
 
