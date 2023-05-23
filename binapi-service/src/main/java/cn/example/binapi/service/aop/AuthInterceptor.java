@@ -2,7 +2,7 @@ package cn.example.binapi.service.aop;
 
 import cn.example.binapi.common.model.entity.User;
 import cn.example.binapi.service.annotation.AuthCheck;
-import cn.example.binapi.service.common.ResponseStatus;
+import cn.example.binapi.common.common.ResponseStatus;
 import cn.example.binapi.service.exception.BusinessException;
 import cn.example.binapi.service.service.UserService;
 import cn.hutool.core.util.ObjectUtil;
