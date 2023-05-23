@@ -1,4 +1,4 @@
-package cn.example.binapi.service.common;
+package cn.example.binapi.common.common;
 
 /**
  * 返回工具类
