@@ -1,6 +1,6 @@
 package cn.example.binapi.service.config;
 
-import cn.example.binapi.service.common.ResponseStatus;
+import cn.example.binapi.common.common.ResponseStatus;
 import cn.example.binapi.service.exception.BusinessException;
 import cn.hutool.core.util.StrUtil;
 import org.jetbrains.annotations.NotNull;
@@ -11,7 +11,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import static cn.example.binapi.common.constant.CommonConstant.HEADER_NAME;
 import static cn.example.binapi.common.constant.CommonConstant.HEADER_VALUE;
-import static cn.example.binapi.service.common.ResponseText.HEADERS_ERROR;
 
 /**
  * @author Carl
@@ -23,7 +22,7 @@ public class RequestHeaderInterceptor implements HandlerInterceptor {
     public boolean preHandle(HttpServletRequest request, @NotNull HttpServletResponse response, @NotNull Object handler) {
         String headerValue = request.getHeader(HEADER_NAME);
         if (StrUtil.isBlank(headerValue) || !HEADER_VALUE.equals(headerValue)) {
-            throw new BusinessException(ResponseStatus.FORBIDDEN, HEADERS_ERROR.getText());
+            throw new BusinessException(ResponseStatus.HEADERS_ERROR);
         }
         return true;
     }

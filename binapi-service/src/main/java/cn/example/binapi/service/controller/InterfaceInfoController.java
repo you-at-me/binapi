@@ -10,8 +10,8 @@ import cn.example.binapi.common.model.dto.interfaceinfo.InterfaceInfoUpdateReque
 import cn.example.binapi.common.model.entity.InterfaceInfo;
 import cn.example.binapi.common.model.vo.InterfaceInfoVO;
 import cn.example.binapi.service.annotation.AuthCheck;
-import cn.example.binapi.service.common.BaseResponse;
-import cn.example.binapi.service.common.ResultUtils;
+import cn.example.binapi.common.common.BaseResponse;
+import cn.example.binapi.common.common.ResultUtils;
 import cn.example.binapi.service.service.InterfaceInfoService;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.extern.slf4j.Slf4j;
@@ -77,7 +77,7 @@ public class InterfaceInfoController {
     /**
      * 接口购买，确定购买次数，给某个用户分配某条接口的权限
      */
-    @GetMapping("purchase")
+    @PostMapping("purchase")
     public BaseResponse<String> purchaseInterface(@RequestBody InterfacePurchaseRequest interfacePurchaseRequest, HttpServletRequest request) {
         String res = interfaceInfoService.purchaseInterface(interfacePurchaseRequest, request);
         return ResultUtils.success(res);

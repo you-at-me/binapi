@@ -1,8 +1,12 @@
 package cn.example.binapi.service.controller;
 
 
+import cn.example.binapi.common.common.BaseResponse;
+import cn.example.binapi.common.common.ResponseStatus;
+import cn.example.binapi.common.common.ResultUtils;
 import cn.example.binapi.common.constant.CommonConstant;
 import cn.example.binapi.common.constant.UserConstant;
+import cn.example.binapi.service.exception.BusinessException;
 import cn.example.binapi.common.model.dto.interfaceinfo.InterfaceInfoQueryRequest;
 import cn.example.binapi.common.model.dto.userInterfaceInfo.UserInterfaceInfoAddRequest;
 import cn.example.binapi.common.model.dto.userInterfaceInfo.UserInterfaceInfoQueryRequest;
@@ -11,10 +15,6 @@ import cn.example.binapi.common.model.entity.InterfaceInfo;
 import cn.example.binapi.common.model.entity.User;
 import cn.example.binapi.common.model.entity.UserInterfaceInfo;
 import cn.example.binapi.service.annotation.AuthCheck;
-import cn.example.binapi.service.common.BaseResponse;
-import cn.example.binapi.service.common.ResponseStatus;
-import cn.example.binapi.service.common.ResultUtils;
-import cn.example.binapi.service.exception.BusinessException;
 import cn.example.binapi.service.mapper.UserInterfaceInfoMapper;
 import cn.example.binapi.service.service.InterfaceInfoService;
 import cn.example.binapi.service.service.UserInterfaceInfoService;
@@ -36,7 +36,6 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static cn.example.binapi.common.constant.RedisConstant.USER_INTERFACE_PREFIX;
-import static cn.example.binapi.service.common.ResponseText.USER_NOT_EXIST;
 
 
 @RestController
@@ -88,7 +87,7 @@ public class UserInterfaceInfoController {
     public BaseResponse<IPage<InterfaceInfo>> getAvailableInterfaceInfo(InterfaceInfoQueryRequest interfaceInfoQueryRequest, HttpServletRequest request) {
         User loginUser = userService.getLoginUser(request);
         if (loginUser == null || loginUser.getId() == 0) {
-            throw new BusinessException(ResponseStatus.PARAMS_ERROR, USER_NOT_EXIST.getText());
+            throw new BusinessException(ResponseStatus.USER_NOT_EXIST);
         }
 
         IPage<InterfaceInfo> interfaceInfoIPage = (IPage<InterfaceInfo>) redisTemplate.opsForValue().get(USER_INTERFACE_PREFIX + interfaceInfoQueryRequest.toString());

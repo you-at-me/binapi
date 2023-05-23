@@ -2,10 +2,10 @@ package cn.example.binapi.service.controller;
 
 import cn.example.binapi.common.model.entity.User;
 import cn.example.binapi.service.annotation.AuthCheck;
-import cn.example.binapi.service.common.BaseResponse;
+import cn.example.binapi.common.common.BaseResponse;
 import cn.example.binapi.common.common.UserDeleteRequest;
-import cn.example.binapi.service.common.ResponseStatus;
-import cn.example.binapi.service.common.ResultUtils;
+import cn.example.binapi.common.common.ResponseStatus;
+import cn.example.binapi.common.common.ResultUtils;
 import cn.example.binapi.common.constant.CommonConstant;
 import cn.example.binapi.service.exception.BusinessException;
 import cn.example.binapi.common.model.dto.post.PostAddRequest;
