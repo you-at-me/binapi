@@ -20,7 +20,7 @@ public class InnerUserServiceImpl implements InnerUserService {
 
     @Override
     public User getInvokeUser(String accessKey) {
-        if (StringUtils.isAnyBlank(accessKey)) {
+        if (StringUtils.isBlank(accessKey)) {
             throw new BusinessException(ResponseStatus.PARAMS_ERROR);
         }
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();

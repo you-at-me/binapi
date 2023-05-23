@@ -1,7 +1,12 @@
 package cn.example.binapi.service.service.impl.inner;
 
+import cn.example.binapi.common.common.ResponseStatus;
+import cn.example.binapi.common.model.entity.UserInterfaceInfo;
+import cn.example.binapi.service.exception.BusinessException;
 import cn.example.binapi.service.service.UserInterfaceInfoService;
 import cn.example.binapi.common.service.inner.InnerUserInterfaceInfoService;
+import cn.hutool.core.util.ObjectUtil;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import org.apache.dubbo.config.annotation.DubboService;
 
 import javax.annotation.Resource;
@@ -11,6 +16,19 @@ public class InnerUserInterfaceInfoServiceImpl implements InnerUserInterfaceInfo
 
     @Resource
     private UserInterfaceInfoService userInterfaceInfoService;
+
+    @Override
+    public boolean hasLeftNum(Long interfaceId, Long userId) {
+        if (interfaceId <= 0 || userId <= 0) {
+            throw new BusinessException(ResponseStatus.PARAMS_ERROR);
+        }
+
+        QueryWrapper<UserInterfaceInfo> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("interface_info_id", interfaceId).eq("user_id", userId).gt("left_num", 0);
+        UserInterfaceInfo userInterfaceInfo = userInterfaceInfoService.getOne(queryWrapper);
+
+        return !ObjectUtil.isNull(userInterfaceInfo);
+    }
 
     /**
      * 调用次数计数
