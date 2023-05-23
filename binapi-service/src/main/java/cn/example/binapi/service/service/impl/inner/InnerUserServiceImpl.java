@@ -2,7 +2,7 @@ package cn.example.binapi.service.service.impl.inner;
 
 
 import cn.example.binapi.common.model.entity.User;
-import cn.example.binapi.service.common.ResponseStatus;
+import cn.example.binapi.common.common.ResponseStatus;
 import cn.example.binapi.service.exception.BusinessException;
 import cn.example.binapi.service.mapper.UserMapper;
 import cn.example.binapi.common.service.inner.InnerUserService;

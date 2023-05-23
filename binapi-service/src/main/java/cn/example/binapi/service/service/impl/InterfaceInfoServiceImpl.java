@@ -2,8 +2,10 @@ package cn.example.binapi.service.service.impl;
 
 import cn.example.binapi.common.common.InterfaceIdRequest;
 import cn.example.binapi.common.common.InterfacePurchaseRequest;
+import cn.example.binapi.common.common.ResponseStatus;
 import cn.example.binapi.common.constant.CommonConstant;
 import cn.example.binapi.common.constant.UserConstant;
+import cn.example.binapi.service.exception.BusinessException;
 import cn.example.binapi.common.model.dto.interfaceinfo.InterfaceInfoAddRequest;
 import cn.example.binapi.common.model.dto.interfaceinfo.InterfaceInfoInvokeRequest;
 import cn.example.binapi.common.model.dto.interfaceinfo.InterfaceInfoQueryRequest;
@@ -15,8 +17,6 @@ import cn.example.binapi.common.model.enums.InterfaceStateInfoEnum;
 import cn.example.binapi.common.model.vo.InterfaceInfoVO;
 import cn.example.binapi.sdk.Model.Api;
 import cn.example.binapi.sdk.client.RemoteCallClient;
-import cn.example.binapi.service.common.ResponseStatus;
-import cn.example.binapi.service.exception.BusinessException;
 import cn.example.binapi.service.mapper.InterfaceInfoMapper;
 import cn.example.binapi.service.service.InterfaceInfoService;
 import cn.example.binapi.service.service.UserInterfaceInfoService;
@@ -43,11 +43,9 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static cn.example.binapi.common.constant.CommonConstant.APPID;
-import static cn.example.binapi.common.constant.CommonConstant.APPID_EXPIRE;
+import static cn.example.binapi.common.constant.CommonConstant.*;
 import static cn.example.binapi.common.constant.RedisConstant.INTERFACE_PREFIX;
 import static cn.example.binapi.common.constant.UserConstant.USER_LOGIN_STATE;
-import static cn.example.binapi.service.common.ResponseText.*;
 
 /**
  * 接口信息表实现类
@@ -80,7 +78,7 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
             throw new BusinessException(ResponseStatus.PARAMS_ERROR);
         }
         if (StringUtils.isNotBlank(name) && name.length() > 50) {
-            throw new BusinessException(ResponseStatus.PARAMS_ERROR, "名称过长");
+            throw new BusinessException(ResponseStatus.PARAMS_TOO_LONG);
         }
     }
 
@@ -181,8 +179,8 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
         }
         // 验证接口是否可以被远程调用
         String res = onlineInvokeInterface(idRequest, u);
-        if (INTERFACE_CALL_FAILED.getText().equals(res)) {
-            throw new BusinessException(ResponseStatus.SYSTEM_ERROR, INTERFACE_NOT_USED.getText());
+        if (INTERFACE_CALL_FAILED.equals(res)) {
+            throw new BusinessException(ResponseStatus.INTERFACE_NOT_USED);
         }
         // 更新状态，进行发布，也就是将状态置为 1
         InterfaceInfo newInterfaceInfo = new InterfaceInfo();
@@ -199,7 +197,7 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
 
     private String onlineInvokeInterface(InterfaceInfoInvokeRequest idRequest, User u) {
         String result = getRemoteResult(idRequest, u);
-        return StrUtil.isBlank(result) ? INTERFACE_CALL_FAILED.getText() : result;
+        return StrUtil.isBlank(result) ? INTERFACE_CALL_FAILED : result;
     }
 
     private String getRemoteResult(InterfaceInfoInvokeRequest infoRequest, User u) {
@@ -254,41 +252,45 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
     }
 
     @Override
+    @Transactional
     public String purchaseInterface(InterfacePurchaseRequest interfacePurchaseRequest, HttpServletRequest request) {
-        User u = (User) request.getSession().getAttribute(USER_LOGIN_STATE);
-        UpdateWrapper<InterfaceInfo> updateWrapper = new UpdateWrapper<>();
+        User user = (User) request.getSession().getAttribute(USER_LOGIN_STATE);
         Long interfaceId = interfacePurchaseRequest.getId();
         InterfaceInfo interfaceInfo = getById(interfaceId);
         if (ObjectUtil.isEmpty(interfaceInfo)) {
             throw new BusinessException(ResponseStatus.PARAMS_ERROR);
         }
-        Long userId = u.getId();
+        UpdateWrapper<InterfaceInfo> updateInterface = new UpdateWrapper<>();
+        Long userId = user.getId();
         int purchaseNum = interfacePurchaseRequest.getPurchaseNum();
-        updateWrapper.eq("id", interfaceId);
-        updateWrapper.eq("user_id", userId);
-        updateWrapper.setSql("left_num = left_num - " + purchaseNum);
+        updateInterface.eq("id", interfaceId);
+        updateInterface.eq("user_id", userId);
+        updateInterface.setSql("left_num = left_num - " + purchaseNum);
         // TODO Calculate the total price of the interface, then pay, and the deduction can only be called after the response is successful
-        boolean update = update(updateWrapper);
-        boolean save = false;
-        if (update) {
-            UserInterfaceInfo o = new UserInterfaceInfo();
-            o.setUserId(userId);
-            o.setInterfaceInfoId(interfaceId);
-            o.setLeftNum(purchaseNum);
-            o.setStatus(interfaceInfo.getStatus());
-            save = userInterfaceInfoService.save(o);
-        }
-        if (!save && update) {
-            UpdateWrapper<InterfaceInfo> wrapper = new UpdateWrapper<>();
-            wrapper.eq("id", interfaceId);
-            wrapper.eq("user_id", userId);
-            wrapper.setSql("left_num = left_num + " + purchaseNum);
-            update = false;
-            while (!update) { // Use loops to solve the following database update problems
-                update = update(updateWrapper); // Tips:What to do if the update fails here？
+        boolean u = update(updateInterface);
+        boolean s = false;
+        if (u) { // If the interface information table deducts the number of remaining interfaces called successfully, then assume that the information that the user operates the interface exists
+            UpdateWrapper<UserInterfaceInfo> updateUserInterface = new UpdateWrapper<>();
+            updateUserInterface.eq("user_id", userId);
+            updateUserInterface.eq("interface_info_id", interfaceId);
+            updateUserInterface.setSql("left_num = left_num + " + purchaseNum);
+            s = userInterfaceInfoService.update(updateUserInterface);
+            if (!s) { // If it fails, it means a new user, then add user interface info
+                UserInterfaceInfo o = new UserInterfaceInfo();
+                o.setUserId(userId);
+                o.setInterfaceInfoId(interfaceId);
+                o.setLeftNum(purchaseNum);
+                o.setStatus(interfaceInfo.getStatus());
+                s = userInterfaceInfoService.save(o);
             }
         }
-        return update && save ? INTERFACE_PURCHASE_SUCCESS.getText() : INTERFACE_PURCHASE_FAILED.getText();
+        if (!s && u) { // s failed, to ensure atomicity, perform the following operations
+            u = false;
+            while (!u) { // Use loops to solve the following database update problems
+                u = updateById(interfaceInfo); // Tips:What to do if the update fails here？then loop
+            }
+        }
+        return u && s ? INTERFACE_PURCHASE_SUCCESS : INTERFACE_PURCHASE_FAILED;
     }
 
     @Override
@@ -310,11 +312,11 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
             stringRedisTemplate.opsForHash().put(INTERFACE_PREFIX, String.valueOf(id), interfaceJson);
         }
         if (o.getStatus() == InterfaceStateInfoEnum.OFFLINE.getValue()) {
-            throw new BusinessException(ResponseStatus.SYSTEM_ERROR, INTERFACE_CLOSURE.getText());
+            throw new BusinessException(ResponseStatus.INTERFACE_CLOSURE);
         }
         User user = userService.getLoginUser(request);
         String result = getRemoteResult(interfaceInfoInvokeRequest, user);
-        if (StrUtil.isBlank(result)) return INTERFACE_CALL_FAILED.getText();
+        if (StrUtil.isBlank(result)) return INTERFACE_CALL_FAILED;
         // 在接口被成功调用的时候，远程接口网关已经对调用次数做统计了，这里只更新缓存直接覆盖即可。
         QueryWrapper<UserInterfaceInfo> queryWrapper = new QueryWrapper<>(); // TODO 可单独开启一个线程去执行
         queryWrapper.eq("user_id", user.getId());

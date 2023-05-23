@@ -2,15 +2,14 @@ package cn.example.binapi.service.service.impl;
 
 
 import cn.example.binapi.common.common.PageRequest;
+import cn.example.binapi.common.common.ResponseStatus;
+import cn.example.binapi.service.exception.BusinessException;
 import cn.example.binapi.common.model.dto.interfaceinfo.InterfaceInfoQueryRequest;
 import cn.example.binapi.common.model.dto.userInterfaceInfo.UserInterfaceInfoAddRequest;
 import cn.example.binapi.common.model.dto.userInterfaceInfo.UserInterfaceInfoUpdateRequest;
 import cn.example.binapi.common.model.entity.InterfaceInfo;
 import cn.example.binapi.common.model.entity.User;
 import cn.example.binapi.common.model.entity.UserInterfaceInfo;
-import cn.example.binapi.service.common.ResponseStatus;
-import cn.example.binapi.service.common.ResponseText;
-import cn.example.binapi.service.exception.BusinessException;
 import cn.example.binapi.service.mapper.InterfaceInfoMapper;
 import cn.example.binapi.service.mapper.UserInterfaceInfoMapper;
 import cn.example.binapi.service.service.InterfaceInfoService;
@@ -62,10 +61,10 @@ public class UserInterfaceInfoServiceImpl extends ServiceImpl<UserInterfaceInfoM
             throw new BusinessException(ResponseStatus.PARAMS_ERROR);
         }
         if (add && userInterfaceInfo.getInterfaceInfoId() <= 0 || userInterfaceInfo.getUserId() <= 0) {
-            throw new BusinessException(ResponseStatus.PARAMS_ERROR, "接口或用户不存在");
+            throw new BusinessException(ResponseStatus.NOT_EXIST);
         }
         if (userInterfaceInfo.getLeftNum() <= 0) {
-            throw new BusinessException(ResponseStatus.PARAMS_ERROR, "调用次数不足");
+            throw new BusinessException(ResponseStatus.COUNT_NOT_FULL);
         }
     }
 
@@ -261,11 +260,11 @@ public class UserInterfaceInfoServiceImpl extends ServiceImpl<UserInterfaceInfoM
         queryWrapper.eq("user_id", userId);
         UserInterfaceInfo userInterfaceInfo = this.getOne(queryWrapper);
         if (ObjectUtil.isNull(userInterfaceInfo)) {
-            throw new BusinessException(ResponseStatus.NOT_FOUND, ResponseText.INTERFACE_EMPTY.getText());
+            throw new BusinessException(ResponseStatus.INTERFACE_EMPTY);
         }
         // 判断剩余次数是否足够
         if (userInterfaceInfo.getLeftNum() <= 0) {
-            throw new BusinessException(ResponseStatus.PARAMS_ERROR, ResponseText.INTERFACE_NOT_FULL.getText());
+            throw new BusinessException(ResponseStatus.INTERFACE_NOT_FULL);
         }
         // 构造UpdateWrapper对象，设置更新条件和更新内容
         // TODO：这里最好不要直接操作数据库，要考虑高并发多流量场景，可以使用原子类缓存加锁设计业务场景

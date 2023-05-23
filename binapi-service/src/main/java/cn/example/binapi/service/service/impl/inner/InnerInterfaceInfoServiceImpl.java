@@ -2,7 +2,7 @@ package cn.example.binapi.service.service.impl.inner;
 
 import cn.example.binapi.common.model.entity.InterfaceInfo;
 import cn.example.binapi.common.model.entity.UserInterfaceInfo;
-import cn.example.binapi.service.common.ResponseStatus;
+import cn.example.binapi.common.common.ResponseStatus;
 import cn.example.binapi.service.exception.BusinessException;
 import cn.example.binapi.service.mapper.InterfaceInfoMapper;
 import cn.example.binapi.service.service.UserInterfaceInfoService;

@@ -1,12 +1,11 @@
 package cn.example.binapi.service.service.impl;
 
+import cn.example.binapi.common.common.ResponseStatus;
 import cn.example.binapi.common.constant.UserConstant;
+import cn.example.binapi.service.exception.BusinessException;
 import cn.example.binapi.common.model.dto.user.UserAddRequest;
 import cn.example.binapi.common.model.dto.user.UserUpdateRequest;
 import cn.example.binapi.common.model.entity.User;
-import cn.example.binapi.service.common.ResponseStatus;
-import cn.example.binapi.service.common.ResponseText;
-import cn.example.binapi.service.exception.BusinessException;
 import cn.example.binapi.service.mapper.UserMapper;
 import cn.example.binapi.service.service.UserService;
 import cn.hutool.core.util.ObjectUtil;
@@ -25,10 +24,9 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Objects;
 
+import static cn.example.binapi.common.common.ResponseStatus.*;
 import static cn.example.binapi.common.constant.CommonConstant.SALT;
 import static cn.example.binapi.common.constant.UserConstant.USER_LOGIN_STATE;
-import static cn.example.binapi.service.common.ResponseStatus.PARAMS_ERROR;
-import static cn.example.binapi.service.common.ResponseText.*;
 
 
 /**
@@ -45,30 +43,30 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     public long userRegister(String account, String password, String checkPassword, String phoneOrMail) { // 另一种注册方式，手机号和邮箱注册防水板
         // 1. 校验
         if (StringUtils.isAnyBlank(account, password, checkPassword)) {
-            throw new BusinessException(PARAMS_ERROR, ResponseText.PARAMS_EMPTY.getText());
+            throw new BusinessException(PARAMS_EMPTY);
         }
         if (account.length() < 4) {
-            throw new BusinessException(ResponseStatus.PARAMS_ERROR, ACCOUNT_SHORT.getText());
+            throw new BusinessException(ACCOUNT_SHORT);
         }
         if (account.length() > 16) {
-            throw new BusinessException(ResponseStatus.PARAMS_ERROR, ACCOUNT_LONG.getText());
+            throw new BusinessException(ACCOUNT_LONG);
         }
         if (password.length() < 6 || checkPassword.length() < 6) {
-            throw new BusinessException(ResponseStatus.PARAMS_ERROR, "用户密码过短");
+            throw new BusinessException(PASSWORD_SHORT);
         }
         if (password.length() > 20 || checkPassword.length() > 20) {
-            throw new BusinessException(ResponseStatus.PARAMS_ERROR, "用户密码过长");
+            throw new BusinessException(PASSWORD_LONG);
         }
         // 密码和校验密码相同
         if (!password.equals(checkPassword)) {
-            throw new BusinessException(PARAMS_ERROR, "两次输入的密码不一致");
+            throw new BusinessException(PASSWORD_NOT_COMPLIANT);
         }
         // 账户不能重复
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("account", account);
         long count = userMapper.selectCount(queryWrapper);
         if (count > 0) {
-            throw new BusinessException(PARAMS_ERROR, "账号重复");
+            throw new BusinessException(ACCOUNT_EXIST);
         }
         // 2. 加密，使用 MD5 对密码加盐加密
         String encryptPassword = DigestUtils.md5DigestAsHex((SALT + password).getBytes());
@@ -86,7 +84,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             user.setSecretKey(secretKey);
             boolean saveResult = save(user);
             if (!saveResult) {
-                throw new BusinessException(ResponseStatus.SYSTEM_ERROR, "注册失败，数据库错误");
+                throw new BusinessException(ResponseStatus.REGISTER_ERROR);
             }
             return user.getId();
         }
@@ -96,13 +94,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     public User userLogin(String account, String password, HttpServletRequest request) {
         // 1. 数据校验
         if (StringUtils.isAnyBlank(account, password)) {
-            throw new BusinessException(PARAMS_ERROR, "参数为空");
+            throw new BusinessException(PARAMS_EMPTY);
         }
         if (account.length() < 4) {
-            throw new BusinessException(PARAMS_ERROR, "账号错误");
+            throw new BusinessException(ACCOUNT_ERROR);
         }
         if (password.length() < 6) {
-            throw new BusinessException(PARAMS_ERROR, "密码错误");
+            throw new BusinessException(PASSWORD_ERROR);
         }
         // 2. 加密校验密码
         String encryptPassword = DigestUtils.md5DigestAsHex((SALT + password).getBytes());
@@ -114,7 +112,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         // 用户不存在
         if (ObjectUtil.isNull(user)) {
             log.info("user login failed, account cannot match userPassword");
-            throw new BusinessException(PARAMS_ERROR, "用户不存在或密码错误");
+            throw new BusinessException(NOT_ERROR);
         }
         if (ObjectUtil.isEmpty(request.getSession().getAttribute(USER_LOGIN_STATE))) { // 防止频繁创建session
             // 3. 如果用户状态 session 没有存过，则记录用户登录状态，将其存入 redis 缓存当中，并设置过期时间
@@ -134,7 +132,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             throw new BusinessException(ResponseStatus.PARAMS_ERROR);
         }
         if (request.getSession().getAttribute(USER_LOGIN_STATE) == null) {
-            throw new BusinessException(ResponseStatus.OPERATION_ERROR, ResponseStatus.NOT_LOGIN.getMessage());
+            throw new BusinessException(ResponseStatus.NOT_LOGIN);
         }
         request.getSession().removeAttribute(USER_LOGIN_STATE);
         return true;
@@ -163,16 +161,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         String account = userAddRequest.getAccount();
         String password = userAddRequest.getPassword();
         if (account.length() < 4) {
-            throw new BusinessException(PARAMS_ERROR, ACCOUNT_SHORT.getText());
+            throw new BusinessException(ACCOUNT_SHORT);
         }
         if (account.length() > 16) {
-            throw new BusinessException(PARAMS_ERROR, ACCOUNT_LONG.getText());
+            throw new BusinessException(ACCOUNT_LONG);
         }
         if (password.length() < 6) {
-            throw new BusinessException(PARAMS_ERROR, PASSWORD_SHORT.getText());
+            throw new BusinessException(PASSWORD_SHORT);
         }
         if (password.length() > 20) {
-            throw new BusinessException(PARAMS_ERROR, PASSWORD_LONG.getText());
+            throw new BusinessException(PASSWORD_LONG);
         }
         User user = new User();
         // 2. 加密，使用 MD5 对密码加盐加密
@@ -198,14 +196,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
         String account = userUpdateRequest.getAccount();
         if (account.length() < 4) {
-            throw new BusinessException(PARAMS_ERROR, ACCOUNT_SHORT.getText());
+            throw new BusinessException(ACCOUNT_SHORT);
         }
         if (account.length() > 16) {
-            throw new BusinessException(PARAMS_ERROR, ACCOUNT_LONG.getText());
+            throw new BusinessException(ACCOUNT_LONG);
         }
         User user = getById(userUpdateRequest.getId());
         if (ObjectUtil.isNull(user)) {
-            throw new BusinessException(PARAMS_ERROR, USER_NOT_EXIST.getText());
+            throw new BusinessException(USER_NOT_EXIST);
         }
         String password = userUpdateRequest.getPassword();
         String encryptPassword = DigestUtils.md5DigestAsHex((SALT + password).getBytes());
