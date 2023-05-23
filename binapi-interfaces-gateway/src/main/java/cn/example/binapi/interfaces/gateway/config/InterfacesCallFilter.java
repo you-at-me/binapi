@@ -47,7 +47,7 @@ import static cn.example.binapi.common.constant.CommonConstant.COUNT_EMPTY;
  */
 @Slf4j
 @Component
-public class CustomInterfacesCallFilter implements GlobalFilter, Ordered {
+public class InterfacesCallFilter implements GlobalFilter, Ordered {
 
     @DubboReference
     private InnerUserService innerUserService;
@@ -69,7 +69,7 @@ public class CustomInterfacesCallFilter implements GlobalFilter, Ordered {
         String path = INTERFACE_HOST + request.getPath().value();
         String method = Objects.requireNonNull(request.getMethod()).toString();
         log.info("请求唯一标识：" + request.getId());
-        log.info("请求路径：" + path); // http://localhost:9000/interfaces/name
+        log.info("请求路径：" + path); // http://localhost:9000/interfaces/main
         log.info("请求方法：" + method);
         log.info("请求参数：" + request.getQueryParams()); // 请求参数：{name=[loves]}
         String sourceAddress = Objects.requireNonNull(request.getLocalAddress()).getHostString();
