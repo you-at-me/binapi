@@ -241,7 +241,7 @@ public class UserInterfaceInfoServiceImpl extends ServiceImpl<UserInterfaceInfoM
     }
 
     /**
-     * 接口调用次数+1
+     * 接口调用次数+1,剩余次数-1
      *
      * @param interfaceInfoId 接口信息ID
      * @param userId 用户ID

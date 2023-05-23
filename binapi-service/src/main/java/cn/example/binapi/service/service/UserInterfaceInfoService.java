@@ -29,7 +29,7 @@ public interface UserInterfaceInfoService extends IService<UserInterfaceInfo> {
     void initUserInterfaceInfo();
 
     /**
-     * 接口调用次数+1
+     * 接口调用次数+1,剩余次数-1
      */
     boolean invokeCount(long interfaceInfoId, long userId);
 

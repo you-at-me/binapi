@@ -171,7 +171,7 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
             o = JSONUtil.toBean(JSONUtil.toJsonStr(obj), InterfaceInfo.class);
         }
         if (Objects.isNull(o)) o = getById(id);
-        if (ObjectUtil.isEmpty(o)) throw new BusinessException(ResponseStatus.PARAMS_ERROR);
+        if (ObjectUtil.isEmpty(o)) throw new BusinessException(ResponseStatus.INTERFACE_EMPTY);
         // 仅本人或管理员可修改该接口的状态
         User u = (User) request.getSession().getAttribute(USER_LOGIN_STATE);
         if (!o.getUserId().equals(u.getId()) && userService.isNotAdmin(request)) {
