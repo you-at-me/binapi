@@ -21,8 +21,8 @@ public class MainController {
      * 请求转发
      */
     @RequestMapping("main")
-    public String mainRedirect(HttpServletRequest request, String type) {
-        log.info("mainRedirect...." + type);
+    public String mainRedirect(HttpServletRequest request) {
+        log.info("mainRedirect....");
         String res = mainService.mainRedirect(request);
         return StrUtil.isBlank(res) ? Constants.EMPTYSTRING : res;
     }

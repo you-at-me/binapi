@@ -26,7 +26,7 @@ public class MainServiceAuthentication {
     public boolean isAuth(Map<String, String> headers) {
         // 大部分的请求头权限校验已经在接口网关当中校验过了
         String appId = headers.get(APPID);
-        String s = stringRedisTemplate.opsForValue().get(appId);
+        String s = stringRedisTemplate.opsForValue().get(APPID);
         return !StrUtil.isBlank(s) && s.equals(appId);
     }
 
