@@ -116,15 +116,9 @@ public class InterfacesCallFilter implements GlobalFilter, Ordered {
             return response.setComplete();
         }
         // 4.用户鉴权
-        User invokeUser = null; // Find if a user has been assigned a key
-        try {
-            invokeUser = innerUserService.getInvokeUser(accessKey);
-        } catch (Exception e) {
-            // log.error("getInvokeUser error::{}", e.getMessage());
-            log.error("getInvokeUser error", e);
-        }
-        if (ObjectUtil.isNull(invokeUser)) {
-            log.error("EXIT at NoInvokeUser");
+        User invokeUser = innerUserService.getInvokeUser(accessKey);
+        if (ObjectUtil.isNull(invokeUser)) { // Find if a user has been assigned a key
+            log.error("getInvokeUser error");
             return handleNoAuth(response);
         }
         if (Long.parseLong(Objects.requireNonNull(nonce)) > 10000L) {
@@ -149,7 +143,7 @@ public class InterfacesCallFilter implements GlobalFilter, Ordered {
         }
         // 判断用户是否有操作该接口的权利，从用户接口信息表中查询，当用户购买了对应的接口获得权限才可调用该接口
         // 5. 查询用户是否还有调用次数
-        boolean hasLeftNum = innerInterfaceInfoService.hasLeftNum(Long.parseLong(interfaceId), Long.parseLong(userId));
+        boolean hasLeftNum = innerUserInterfaceInfoService.hasLeftNum(Long.parseLong(interfaceId), Long.parseLong(userId));
         if (!hasLeftNum) { // 调用次数不足
             log.error("EXIT at insufficient count");
             response.setStatusCode(HttpStatus.FORBIDDEN);
@@ -165,7 +159,6 @@ public class InterfacesCallFilter implements GlobalFilter, Ordered {
             // return handleNoAuth(response);
         }
         return handleResponse(exchange, chain, Long.parseLong(interfaceId), invokeUser.getId());
-
     }
 
     /**
@@ -195,10 +188,16 @@ public class InterfacesCallFilter implements GlobalFilter, Ordered {
                         Flux<? extends DataBuffer> fluxBody = Flux.from(body);
                         // 往返回值里写数据，拼接字符串
                         return super.writeWith(fluxBody.map(dataBuffer -> {
-                            // 7. 调用成功，用户操作此次接口的调用次数 + 1 invokeCount, 且不需要对接口信息表的接口剩余调用次数和总调用次数进行更改，因为用户能够调用该接口的次数在一开始购买接口，存入用户接口信息表的时候就被分配了。
+                            // 7. 调用成功，用户操作此次接口的调用次数 + 1 invokeCount, 对接口剩余次数 -1 ; 且还要对接口信息表的总调用次数 +1 ，而剩余接口调用次数不用修改，因为用户能够调用该接口的次数在一开始购买接口时就已经被分配到用户接口信息表了。
                             try {
-                                boolean b = innerUserInterfaceInfoService.invokeCount(interfaceId, userId);
-                                log.info("<-------修改接口调用次数：{}", b ? "成功" : "失败");
+                                boolean a = innerUserInterfaceInfoService.invokeCount(interfaceId, userId);
+                                log.info("<-------修改接口调用次数：{}", a ? "成功" : "失败");
+                                boolean b;
+                                if (a) {
+                                    b = innerInterfaceInfoService.increaseTotalNum(interfaceId);
+                                    while (!b) b = innerInterfaceInfoService.increaseTotalNum(interfaceId);
+                                }
+
                             } catch (Exception e) {
                                 // log.error("invokeCount error::{}", e.getMessage());
                                 log.error("invokeCount error", e);
