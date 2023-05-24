@@ -62,6 +62,11 @@ public class InterfacesCallFilter implements GlobalFilter, Ordered {
 
     private static final String INTERFACE_HOST = "http://localhost:9000";
 
+    /**
+     * TODO: 如何让不同请求域名地址的接口通过网关请求转发到对应不同的服务器接口地址上?
+     *
+     * 根据实际的请求地址应该请求转发到具体的域名请求地址当中去访问，主要方法是维护一个hashmap或者redis缓存(提前记录好所有对应的k、v键值对信息)，记录对应请求地址前缀key与要对应映射的域名地址value，根据此次请求的前缀地址，查询出要转发的域名地址，利用编程式实现转发到对应的接口地址当中去请求，比如前缀是 /info 要转发到 http:www.baidu.com 则可以将前缀作为key、请求转发的域名地址为value，key可以通过request.getPath().value()然后截取对应字符串获得。
+     */
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         // 1. 请求日志
@@ -142,7 +147,7 @@ public class InterfacesCallFilter implements GlobalFilter, Ordered {
             return handleNoAuth(response);
         }
         // 判断用户是否有操作该接口的权利，从用户接口信息表中查询，当用户购买了对应的接口获得权限才可调用该接口
-        // 5. 查询用户是否还有调用次数
+        // 5. 判断用户是否有相应权限调用该接口，如果是还要判断用户对该接口是否还有剩余的调用次数
         boolean hasLeftNum = innerUserInterfaceInfoService.hasLeftNum(Long.parseLong(interfaceId), Long.parseLong(userId));
         if (!hasLeftNum) { // 调用次数不足
             log.error("EXIT at insufficient count");
@@ -177,52 +182,7 @@ public class InterfacesCallFilter implements GlobalFilter, Ordered {
                 log.info("=====  {} 结束 =====", request.getId());
                 return chain.filter(exchange);
             }
-            // 装饰: 增强能力
-            ServerHttpResponseDecorator decoratedResponse = new ServerHttpResponseDecorator(originalResponse) {
-                // 等调用完转发的接口后才会执行
-                @NotNull
-                @Override
-                public Mono<Void> writeWith(@NotNull Publisher<? extends DataBuffer> body) {
-                    log.info("body instanceof Flux: {}", (body instanceof Flux));
-                    if (body instanceof Flux) {
-                        Flux<? extends DataBuffer> fluxBody = Flux.from(body);
-                        // 往返回值里写数据，拼接字符串
-                        return super.writeWith(fluxBody.map(dataBuffer -> {
-                            // 7. 调用成功，用户操作此次接口的调用次数 + 1 invokeCount, 对接口剩余次数 -1 ; 且还要对接口信息表的总调用次数 +1 ，而剩余接口调用次数不用修改，因为用户能够调用该接口的次数在一开始购买接口时就已经被分配到用户接口信息表了。
-                            try {
-                                boolean a = innerUserInterfaceInfoService.invokeCount(interfaceId, userId);
-                                log.info("<-------修改接口调用次数：{}", a ? "成功" : "失败");
-                                boolean b;
-                                if (a) {
-                                    b = innerInterfaceInfoService.increaseTotalNum(interfaceId);
-                                    while (!b) b = innerInterfaceInfoService.increaseTotalNum(interfaceId);
-                                }
-
-                            } catch (Exception e) {
-                                // log.error("invokeCount error::{}", e.getMessage());
-                                log.error("invokeCount error", e);
-                            }
-                            byte[] content = new byte[dataBuffer.readableByteCount()];
-                            dataBuffer.read(content);
-                            DataBufferUtils.release(dataBuffer);//释放掉内存
-                            // 构建日志
-                            StringBuilder sb2 = new StringBuilder(200);
-                            List<Object> rspArgs = new ArrayList<>();
-                            rspArgs.add(originalResponse.getStatusCode());
-                            String data = new String(content, StandardCharsets.UTF_8); //data
-                            sb2.append(data);
-                            // 打印日志
-                            log.info("响应结果：" + data);
-                            log.info("=====  {} 结束 =====", request.getId());
-                            return bufferFactory.wrap(content);
-                        }));
-                    } else {
-                        // 8. 调用失败，返回一个规范的错误码
-                        log.error("<--- {} 响应code异常", getStatusCode());
-                    }
-                    return super.writeWith(body);
-                }
-            };
+            ServerHttpResponseDecorator decoratedResponse = getServerHttpResponseDecorator(interfaceId, userId, request, originalResponse, bufferFactory);
             // 设置response对象为装饰过的
             return chain.filter(exchange.mutate().response(decoratedResponse).build());
         } catch (Exception e) {
@@ -230,6 +190,57 @@ public class InterfacesCallFilter implements GlobalFilter, Ordered {
             log.info("=====  {} over =====", request.getId());
             return chain.filter(exchange);
         }
+    }
+
+    @NotNull
+    private ServerHttpResponseDecorator getServerHttpResponseDecorator(long interfaceId, long userId, ServerHttpRequest request, ServerHttpResponse originalResponse, DataBufferFactory bufferFactory) {
+        // 装饰: 增强能力
+        return new ServerHttpResponseDecorator(originalResponse) {
+            // 等调用完转发的接口后才会执行
+            @NotNull
+            @Override
+            public Mono<Void> writeWith(@NotNull Publisher<? extends DataBuffer> body) {
+                log.info("body instanceof Flux: {}", (body instanceof Flux));
+                if (body instanceof Flux) {
+                    Flux<? extends DataBuffer> fluxBody = Flux.from(body);
+                    // 往返回值里写数据，拼接字符串; 走到这里表示请求已经发送到目标接口服务地址了，如果出现错误是接口地址自己的事情，这里的服务将会照常执行
+                    return super.writeWith(fluxBody.map(dataBuffer -> {
+                        // 7. 调用成功，用户操作此次接口的调用次数 + 1 invokeCount, 对接口剩余次数 -1 ; 且还要对接口信息表的总调用次数 +1 ，而剩余接口调用次数不用修改，因为用户能够调用该接口的次数在一开始购买接口时就已经被分配到用户接口信息表了。
+                        try {
+                            boolean a = innerUserInterfaceInfoService.invokeCount(interfaceId, userId);
+                            log.info("<-------修改接口调用次数：{}", a ? "成功" : "失败");
+                            boolean b = false;
+                            if (a) {
+                                b = innerInterfaceInfoService.increaseTotalNum(interfaceId);
+                                while (!b) b = innerInterfaceInfoService.increaseTotalNum(interfaceId);
+                            }
+                            log.info("<-------修改接口总调用次数：{}", b ? "成功" : "失败");
+
+                        } catch (Exception e) {
+                            // log.error("invokeCount error::{}", e.getMessage());
+                            log.error("invokeCount error", e);
+                        }
+                        byte[] content = new byte[dataBuffer.readableByteCount()];
+                        dataBuffer.read(content);
+                        DataBufferUtils.release(dataBuffer);//释放掉内存
+                        // 构建日志
+                        StringBuilder sb2 = new StringBuilder(200);
+                        List<Object> rspArgs = new ArrayList<>();
+                        rspArgs.add(originalResponse.getStatusCode());
+                        String data = new String(content, StandardCharsets.UTF_8); //data
+                        sb2.append(data);
+                        // 打印日志
+                        log.info("响应结果：" + data);
+                        log.info("=====  {} 结束 =====", request.getId());
+                        return bufferFactory.wrap(content);
+                    }));
+                } else {
+                    // 8. 调用失败，返回一个规范的错误码
+                    log.error("<--- {} 响应code异常", getStatusCode());
+                }
+                return super.writeWith(body);
+            }
+        };
     }
 
     @Override
