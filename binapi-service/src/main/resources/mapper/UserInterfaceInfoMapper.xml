@@ -21,12 +21,11 @@
         total_num,left_num,status,
         create_time,update_time,is_delete
     </sql>
-    <select id="listTopInvokeInterfaceInfo"
-            resultType="cn.example.binapi.common.model.entity.UserInterfaceInfo">
-        select interface_info_id as interfaceInfoId, sum(total_num) as total_num
+    <select id="listTopInvokeInterfaceInfo" resultType="cn.example.binapi.common.model.entity.UserInterfaceInfo">
+        select interface_info_id as interfaceInfoId, sum(total_num) as totalNum
         from tb_user_interface_info
         group by interface_info_id
-        order by total_num desc
+        order by totalNum desc
         limit #{limit};
     </select>
 </mapper>

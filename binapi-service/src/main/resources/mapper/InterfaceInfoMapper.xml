@@ -38,6 +38,7 @@
             ${ew.customSqlSegment}
         </if>
     </select>
+    <!-- 接口信息表与用户接口信息表关联查询，查询出每个被调用的接口信息及其各自被调用的总次数 -->
     <select id="getInterfaceTotalInvokeCounts" resultType="cn.example.binapi.common.model.vo.InterfaceInfoVO">
         SELECT i.id              AS interface_id,
                i.name            AS name,
