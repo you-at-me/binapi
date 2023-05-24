@@ -82,6 +82,14 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
         }
     }
 
+    /**
+     * 这一功能似乎要求很高，很繁琐:(可以作为改进系统设计的一个点)
+     * TODO:如何让用户也可以上传自己的可调用接口: 1.需要提供一个机制(界面)，让用户输入自己的接口host(服务器地址)、接口详细信息，将接口信息写入数据库。2.可以在interfaceInfo表里加个host字段，区分服务器地址（后续需要对数据库表的字段做改进，将url拆分成host+path），让接口提供者更灵活地接入系统; 3.将接口信息写入数据库之前，要对接口进行校验(比如检查他的地址是否遵循规则，测试调用)，保证他是正常的。4.将接口信息写入数据库之前遵循咱们自己开发的要求（并且使用咱们的sdk传入对应的请求地址转发，而且如果把请求地址的前缀和域名地址以分别k、v形式存入redis当中了，则还需要添加对应的映射地址到redis当中) 5.在接入时，平台需要测试调用这个接口，保证他是正常的。6.测试成功之后需要在相应的模块生成对应的代码供后续接口请求地址的调用，同时还要更新接口信息表中的数据。7.在保证不改变源码的同时如果需要新增接口信息，则管理员和用户需要同时满足上述所有操作。
+     *
+     * 注意:我们这里已经不需要关注在新增接口调用的时候去更新SDK了，因为SDK远程调用的接口已经固定是默认的/main前缀地址，而且是通过网关请求转发的，在新增接口的时候，如果测试能够通过则需要改动对应接口被调用的代码，还有一些相关redis前缀域名的更新，请求接口路径映射等操作。
+     *
+     * 具体的新增接口详细信息可以上网查询具体的案例，再结合自身需求融合改进适合本微服务系统方案的设计能力。
+     */
     @Override
     @Transactional
     public long addInterfaceInfo(InterfaceInfoAddRequest interfaceInfoAddRequest, HttpServletRequest request) {
@@ -179,7 +187,7 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
         }
         // 验证接口是否可以被远程调用
         String res = onlineInvokeInterface(idRequest, u);
-        if (INTERFACE_CALL_FAILED.equals(res)) {
+        if (res.equals(INTERFACE_CALL_FAILED)) {
             throw new BusinessException(ResponseStatus.INTERFACE_NOT_USED);
         }
         // 更新状态，进行发布，也就是将状态置为 1
@@ -316,7 +324,7 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
         }
         User user = userService.getLoginUser(request);
         String result = getRemoteResult(interfaceInfoInvokeRequest, user);
-        if (StrUtil.isBlank(result)) return INTERFACE_CALL_FAILED;
+        if (StrUtil.isBlank(result)) throw new BusinessException(ResponseStatus.INTERFACE_CALL_FAILED);
         // 在接口被成功调用的时候，远程接口网关已经对调用次数做统计了，这里只更新缓存直接覆盖即可。
         QueryWrapper<UserInterfaceInfo> queryWrapper = new QueryWrapper<>(); // TODO 可单独开启一个线程去执行
         queryWrapper.eq("user_id", user.getId());

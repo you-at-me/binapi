@@ -2,10 +2,10 @@ package cn.example.binapi.service.service.impl;
 
 import cn.example.binapi.common.common.ResponseStatus;
 import cn.example.binapi.common.constant.UserConstant;
-import cn.example.binapi.service.exception.BusinessException;
 import cn.example.binapi.common.model.dto.user.UserAddRequest;
 import cn.example.binapi.common.model.dto.user.UserUpdateRequest;
 import cn.example.binapi.common.model.entity.User;
+import cn.example.binapi.service.exception.BusinessException;
 import cn.example.binapi.service.mapper.UserMapper;
 import cn.example.binapi.service.service.UserService;
 import cn.hutool.core.util.ObjectUtil;
@@ -22,7 +22,6 @@ import org.springframework.util.ObjectUtils;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.util.Objects;
 
 import static cn.example.binapi.common.common.ResponseStatus.*;
 import static cn.example.binapi.common.constant.CommonConstant.SALT;
@@ -138,17 +137,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         return true;
     }
 
-    /**
-     * 获取当前登录用户
-     */
     @Override
     public User getLoginUser(HttpServletRequest request) {
         // 先判断是否已登录
         User currentUser = (User) request.getSession().getAttribute(USER_LOGIN_STATE);
-        if (Objects.isNull(currentUser) || ObjectUtil.isEmpty(currentUser.getId())) {
+        if (ObjectUtil.isEmpty(currentUser) || currentUser.getId() <= 0) {
             throw new BusinessException(ResponseStatus.NOT_LOGIN);
         }
-        request.getSession().setAttribute(USER_LOGIN_STATE, currentUser);
         return currentUser;
     }
 

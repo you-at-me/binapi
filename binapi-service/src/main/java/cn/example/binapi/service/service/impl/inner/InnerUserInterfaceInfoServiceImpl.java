@@ -11,6 +11,8 @@ import org.apache.dubbo.config.annotation.DubboService;
 
 import javax.annotation.Resource;
 
+import static cn.example.binapi.common.common.ResponseStatus.INTERFACE_NOT_PURCHASED;
+
 @DubboService
 public class InnerUserInterfaceInfoServiceImpl implements InnerUserInterfaceInfoService {
 
@@ -24,7 +26,11 @@ public class InnerUserInterfaceInfoServiceImpl implements InnerUserInterfaceInfo
         }
 
         QueryWrapper<UserInterfaceInfo> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("interface_info_id", interfaceId).eq("user_id", userId).gt("left_num", 0);
+        queryWrapper.eq("interface_info_id", interfaceId).eq("user_id", userId);
+        UserInterfaceInfo one = userInterfaceInfoService.getOne(queryWrapper);
+        if (ObjectUtil.isNull(one)) throw new BusinessException(INTERFACE_NOT_PURCHASED);
+
+        queryWrapper.gt("left_num", 0);
         UserInterfaceInfo userInterfaceInfo = userInterfaceInfoService.getOne(queryWrapper);
 
         return !ObjectUtil.isNull(userInterfaceInfo);
