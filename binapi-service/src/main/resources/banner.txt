@@ -1,1 +1,1 @@
-the project starts: http://127.0.0.1:10010/service/doc.html
+the docs starts: http://127.0.0.1:10010/service/doc.html
