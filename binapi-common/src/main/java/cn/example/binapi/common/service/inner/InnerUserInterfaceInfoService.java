@@ -6,7 +6,7 @@ package cn.example.binapi.common.service.inner;
 public interface InnerUserInterfaceInfoService {
 
     /**
-     * 查询用户是否还有调用次数
+     * 判断用户是否有相应权限调用该接口，并查询用户是否还有调用次数
      */
     boolean hasLeftNum(Long interfaceId, Long userId);
 

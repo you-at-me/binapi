@@ -15,6 +15,9 @@ public enum ResponseStatus {
     SUCCESS(20000, "ok"),
     INTERFACE_PURCHASE_SUCCESS(20010,"接口购买成功"),
 
+    REQUEST_ERROR(30010,"请求异常"),
+    INTERFACE_CALL_FAILED(30011,"远程接口调用失败"),
+
     PARAMS_ERROR(40000, "请求参数错误"),
     PARAMS_CONTENT_ERROR(40001, "请求内容错误"),
     PARAMS_NOT_COMPLIANT(40002, "年龄不符合要求"),
@@ -36,10 +39,11 @@ public enum ResponseStatus {
     TOO_LONG_ERROR(40100, "接口名称太长"),
     INTERFACE_CLOSURE(40101,"接口已关闭"),
     INTERFACE_NOT_USED(40102, "接口不可用"),
-    INTERFACE_EMPTY(40103,"接口不存在"),
-    INTERFACE_NOT_FULL(40104,"接口调用次数不足"),
-    NOT_EXIST(40105, "接口或用户不存在"),
-    COUNT_NOT_FULL(40106, "调用次数不足"),
+    INTERFACE_NOT_PURCHASED(40103, "接口未购买"),
+    INTERFACE_EMPTY(40104,"接口不存在"),
+    INTERFACE_NOT_FULL(40105,"接口调用次数不足"),
+    NOT_EXIST(40106, "接口或用户不存在"),
+    COUNT_NOT_FULL(40107, "调用次数不足"),
 
     NOT_LOGIN(40200, "未登录"),
     NO_AUTH(40201, "无权限"),
