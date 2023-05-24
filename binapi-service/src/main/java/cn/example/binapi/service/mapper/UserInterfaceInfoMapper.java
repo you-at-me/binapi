@@ -2,6 +2,7 @@ package cn.example.binapi.service.mapper;
 
 import cn.example.binapi.common.model.entity.UserInterfaceInfo;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
@@ -11,12 +12,8 @@ import java.util.List;
  */
 public interface UserInterfaceInfoMapper extends BaseMapper<UserInterfaceInfo> {
 
-    List<UserInterfaceInfo> listTopInvokeInterfaceInfo(int limit);
+    List<UserInterfaceInfo> listTopInvokeInterfaceInfo(@Param("limit") int limit);
 
     @Select("SELECT * FROM tb_user_interface_info WHERE id = #{id} FOR UPDATE")
-    UserInterfaceInfo selectByIdForUpdate(Long id);
+    UserInterfaceInfo selectByIdForUpdate(@Param("id") Long id);
 }
-
-
-
-
