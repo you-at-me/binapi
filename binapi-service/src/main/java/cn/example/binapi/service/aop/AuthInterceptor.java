@@ -1,8 +1,8 @@
 package cn.example.binapi.service.aop;
 
+import cn.example.binapi.common.common.ResponseStatus;
 import cn.example.binapi.common.model.entity.User;
 import cn.example.binapi.service.annotation.AuthCheck;
-import cn.example.binapi.common.common.ResponseStatus;
 import cn.example.binapi.service.exception.BusinessException;
 import cn.example.binapi.service.service.UserService;
 import cn.hutool.core.util.ObjectUtil;
@@ -23,7 +23,6 @@ import javax.servlet.http.HttpServletRequest;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 
@@ -58,7 +57,6 @@ public class AuthInterceptor {
         HttpServletRequest request = ((ServletRequestAttributes) requestAttributes).getRequest();
         // 当前登录用户
         User user = userService.getLoginUser(request);
-        if (Objects.isNull(user)) throw new BusinessException(ResponseStatus.NOT_LOGIN);
         if (ObjectUtil.isNotEmpty(authCheck)) {
             List<String> anyRole = Arrays.stream(authCheck.anyRole()).filter(StringUtils::isNotBlank).collect(Collectors.toList()); // 获取注解当中配置的用户权限
             String mustRole = authCheck.mustRole();
