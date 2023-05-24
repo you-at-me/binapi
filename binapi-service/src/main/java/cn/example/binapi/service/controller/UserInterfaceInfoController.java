@@ -111,9 +111,8 @@ public class UserInterfaceInfoController {
     }
 
     /**
-     * 获取列表（仅管理员可使用）
+     * 获取列表
      */
-    @AuthCheck(mustRole = "admin")
     @GetMapping("/list")
     public BaseResponse<List<UserInterfaceInfo>> listUserInterfaceInfo(UserInterfaceInfoQueryRequest userInterfaceInfoQueryRequest) {
         UserInterfaceInfo userInterfaceInfoQuery = new UserInterfaceInfo();
@@ -135,7 +134,6 @@ public class UserInterfaceInfoController {
      * 分页获取列表
      */
     @GetMapping("/list/page")
-    @AuthCheck(mustRole = "admin")
     public BaseResponse<Page<UserInterfaceInfo>> listUserInterfaceInfoByPage(UserInterfaceInfoQueryRequest userInterfaceInfoQueryRequest, HttpServletRequest request) {
         if (userInterfaceInfoQueryRequest == null) {
             throw new BusinessException(ResponseStatus.PARAMS_ERROR);

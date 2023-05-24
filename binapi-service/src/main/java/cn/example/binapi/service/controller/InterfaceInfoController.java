@@ -123,7 +123,11 @@ public class InterfaceInfoController {
         return ResultUtils.success(count);
     }
 
+    /**
+     * 接口信息表与用户接口信息表关联查询，查询出每个被调用的接口信息及其各自被调用的总次数
+     */
     @GetMapping("/getInterfaceInvokeCount")
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     public BaseResponse<List<InterfaceInfoVO>> getInterfaceInvokeCount() {
         List<InterfaceInfoVO> list = interfaceInfoService.getInterfaceInfoTotalInvokeCount();
         return ResultUtils.success(list);

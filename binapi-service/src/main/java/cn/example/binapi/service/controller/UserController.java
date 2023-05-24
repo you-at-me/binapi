@@ -94,6 +94,24 @@ public class UserController {
         return ResultUtils.success(userVO);
     }
 
+    /**
+     * TODO 用户更新accessKey，前端最好单独请求，展示就给用户类似密码关闭'****'展示，数据库还是加密存储
+     */
+    @PostMapping("updateAccessKey")
+    @AuthCheck
+    public BaseResponse<?> updateAccessKey() {
+        return ResultUtils.success(null);
+    }
+
+    /**
+     * TODO 用户更新secretKey，前端最好单独请求，展示就给用户类似密码关闭'****'展示，数据库还是加密存储
+     */
+    @PostMapping("updateSecretKey")
+    @AuthCheck
+    public BaseResponse<?> updateSecretKey() {
+        return ResultUtils.success(null);
+    }
+
     // endregion
 
     // region 增删改查
