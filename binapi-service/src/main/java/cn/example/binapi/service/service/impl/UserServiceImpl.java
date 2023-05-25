@@ -139,7 +139,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     public User getLoginUser(HttpServletRequest request) {
-        // 先判断是否已登录
+        // 根据请求携带的Cookie和这里取的属性key将其Cookie值解析成对应当初所存入的值，这里当初所存入的值是User对象; 如果没有携带请求头Cookie或者携带错误的Cookie都将解析失败，找不到对应的用户User对象。
         User currentUser = (User) request.getSession().getAttribute(USER_LOGIN_STATE);
         if (ObjectUtil.isEmpty(currentUser) || currentUser.getId() <= 0) {
             throw new BusinessException(ResponseStatus.NOT_LOGIN);
