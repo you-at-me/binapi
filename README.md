@@ -41,7 +41,7 @@
 
 | 字段名 | 数据类型 | 长度 | 约束条件 | 说明 |
 | --- | --- | --- | --- | --- |
-| id | bigint |  | NOT NULL AUTO_INCREMENT UNSIGN | 主键 |
+| id | bigint | <br /> | NOT NULL AUTO_INCREMENT UNSIGN | 主键 |
 | username | varchar | 256 |  | 用户昵称 |
 | account | varchar | 256 | NOT NULL | 账号 |
 | phone | varchar | 256 |  | 手机号 |
@@ -70,9 +70,9 @@
 | request_header | text |  |  | 请求头 |
 | response_header | text |  |  | 响应头 |
 | price | decimal | 10 | NOT NULL | 计费规则(元/条) |
-| status | int |  | NOT NULL DEFAULT '0' | 接口状态（0-关闭，1-开启） |
+| status | int |  | NOT NULL DEFAULT '1' | 接口状态（0-关闭，1-开启） |
 | left_num | int |  | NOT NULL UNSIGN | 接口剩余能够被调用的次数 |
-| total_num | int |  | NOT NULL DEFAULT 0 UNSIGN | 接口已经被调用的总次数 |
+| total_num | int |  | NOT NULL DEFAULT '0' UNSIGN | 接口已经被调用的总次数 |
 | user_id | bigint |  | NOT NULL UNSIGN | 创建人 |
 | create_time | datetime |  | NOT NULL DEFAULT CURRENT_TIMESTAMP | 创建时间 |
 | update_time | datetime |  | NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP | 更新时间 |
@@ -94,7 +94,7 @@
 | is_delete | tinyint |  | NOT NULL DEFAULT '0' | 是否删除(0-未删, 1-已删) |
 
 ## 项目设计
-### alias-openapi-service微服务
+### binapi-service服务模块
 
 - 设计通用返回类
    - 自定义错误码
@@ -121,6 +121,7 @@
 ## 项目遇到的问题
 ## 项目优化思路
 ## 项目正在开发的进展规划
+
 
 
 
