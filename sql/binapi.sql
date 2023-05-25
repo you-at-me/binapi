@@ -30,16 +30,16 @@ CREATE TABLE `tb_interface_info`  (
   `request_params` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '请求参数',
   `request_header` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '请求头',
   `response_header` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '响应头',
-  `price` decimal(10, 2) UNSIGNED NOT NULL DEFAULT 0.01 COMMENT '计费规则(元/条)\n',
+  `price` decimal(10, 2) UNSIGNED NOT NULL DEFAULT 0.01 COMMENT '计费规则(元/条)',
   `status` int NOT NULL DEFAULT 1 COMMENT '接口状态（0-关闭，1-开启）',
-  `left_num` int UNSIGNED NOT NULL DEFAULT 1000 COMMENT '接口剩余能够被调用的次数',
+  `left_num` int UNSIGNED NOT NULL COMMENT '接口剩余能够被调用的次数',
   `total_num` int UNSIGNED NOT NULL DEFAULT 0 COMMENT '接口已经被调用的总次数，初始默认是0',
-  `user_id` bigint UNSIGNED NOT NULL COMMENT '创建人',
+  `user_id` bigint UNSIGNED NOT NULL COMMENT '创建人ID',
   `create_time` datetime(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0) COMMENT '创建时间',
   `update_time` datetime(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0) ON UPDATE CURRENT_TIMESTAMP(0) COMMENT '更新时间',
   `is_delete` tinyint NOT NULL DEFAULT 0 COMMENT '是否删除(0-未删, 1-已删)',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 13 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci COMMENT = '接口信息表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 13 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '接口信息表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of tb_interface_info
@@ -53,12 +53,12 @@ INSERT INTO `tb_interface_info` VALUES (1380170301538304, '一言文本api接口
 DROP TABLE IF EXISTS `tb_soul_soup`;
 CREATE TABLE `tb_soul_soup`  (
   `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键ID',
-  `content` varchar(256) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL COMMENT '鸡汤内容',
+  `content` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '鸡汤内容',
   `create_time` datetime(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0) COMMENT '创建时间',
   `update_time` datetime(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0) ON UPDATE CURRENT_TIMESTAMP(0) COMMENT '更新时间',
   `is_delete` tinyint NOT NULL DEFAULT 0 COMMENT '是否删除，0-未删除，1-已删除',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci COMMENT = '心灵鸡汤表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '心灵鸡汤表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of tb_soul_soup
@@ -85,7 +85,7 @@ CREATE TABLE `tb_user`  (
   `is_delete` tinyint NOT NULL DEFAULT 0 COMMENT '是否删除(0-未删, 1-已删)',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uni_userAccount`(`account`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1380078046044161 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci COMMENT = '用户信息表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 1380078046044161 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '用户信息表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of tb_user
@@ -103,14 +103,14 @@ CREATE TABLE `tb_user_interface_info`  (
   `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键',
   `user_id` bigint UNSIGNED NOT NULL COMMENT '调用用户 id',
   `interface_info_id` bigint UNSIGNED NOT NULL COMMENT '接口 id',
-  `left_num` int UNSIGNED NOT NULL DEFAULT 0 COMMENT '每个用户操作该接口还剩余的调用次数',
+  `left_num` int UNSIGNED NOT NULL COMMENT '每个用户操作该接口还剩余的调用次数',
   `total_num` int UNSIGNED NOT NULL DEFAULT 0 COMMENT '每个用户操作该接口的总调用次数',
   `status` int NOT NULL DEFAULT 1 COMMENT '0-禁用，1-正常',
   `create_time` datetime(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0) COMMENT '创建时间',
   `update_time` datetime(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0) ON UPDATE CURRENT_TIMESTAMP(0) COMMENT '更新时间',
   `is_delete` tinyint NOT NULL DEFAULT 0 COMMENT '是否删除(0-未删, 1-已删)',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci COMMENT = '用户调用接口信息表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '用户调用接口信息表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of tb_user_interface_info
