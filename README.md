@@ -40,8 +40,8 @@
 该表中主要存储用户信息
 
 | 字段名 | 数据类型 | 长度 | 约束条件 | 说明 |
-| --- | --- | --- | --- | --- |
-| id | bigint | <br /> | NOT NULL AUTO_INCREMENT UNSIGN | 主键 |
+| :-- | :-- | :-- | :-- | :-- |
+| id | bigint |  | NOT NULL AUTO_INCREMENT UNSIGN | 主键 |
 | username | varchar | 256 |  | 用户昵称 |
 | account | varchar | 256 | NOT NULL | 账号 |
 | phone | varchar | 256 |  | 手机号 |
@@ -60,7 +60,7 @@
 该表用于存储接口信息。
 
 | 字段名 | 数据类型 | 长度 | 约束条件 | 说明 |
-| --- | --- | --- | --- | --- |
+| :-- | :-- | :-- | :-- | :-- |
 | id | bigint |  | NOT NULL AUTO_INCREMENT UNSIGN | 主键 |
 | name | varchar | 256 | NOT NULL | 名称 |
 | description | varchar | 256 |  | 描述 |
@@ -82,7 +82,7 @@
 该表用于存储用户调用接口的信息。
 
 | 字段名 | 数据类型 | 长度 | 约束条件 | 说明 |
-| --- | --- | --- | --- | --- |
+| :-- | :-- | :-- | :-- | :-- |
 | id | bigint |  | NOT NULL AUTO_INCREMENT UNSIGN | 主键 |
 | user_id | bigint |  | NOT NULL UNSIGN | 调用用户 id |
 | interface_info_id | bigint |  | NOT NULL UNSIGN | 接口 id |
@@ -121,7 +121,6 @@
 ## 项目遇到的问题
 ## 项目优化思路
 ## 项目正在开发的进展规划
-
 
 
 
