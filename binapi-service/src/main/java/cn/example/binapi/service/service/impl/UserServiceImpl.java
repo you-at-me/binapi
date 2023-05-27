@@ -38,8 +38,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Resource
     private UserMapper userMapper;
 
+    /**
+     * 用户注册，手机号和邮箱注册是另一种方式，可选(二选一)
+     *
+     * @param account   用户账户
+     * @param password  用户密码
+     * @param checkPassword 校验密码
+     * @param phoneOrMail 注册手机号，可为空，当上述不通过账号注册时 手机号和邮箱必须选一个
+     * @return 返回用户ID
+     */
     @Override
-    public long userRegister(String account, String password, String checkPassword, String phoneOrMail) { // 另一种注册方式，手机号和邮箱注册防水板
+    public long userRegister(String account, String password, String checkPassword, String phoneOrMail) {
         // 1. 校验
         if (StringUtils.isAnyBlank(account, password, checkPassword)) {
             throw new BusinessException(PARAMS_EMPTY);
