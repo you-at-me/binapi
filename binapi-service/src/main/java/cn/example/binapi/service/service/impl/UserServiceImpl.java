@@ -78,7 +78,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
         // 2. 加密，使用 MD5 对密码加盐加密
         String encryptPassword = DigestUtils.md5DigestAsHex((SALT + password).getBytes());
-        // 3. 分配accessKey、secretKey
+        // 3. 分配accessKey、secretKey; API签名认证，保证安全性，不能随意一个人进行调用，适用于用户无需登录，只认签名，不关注登录状态的场景。
         String accessKey = DigestUtil.md5Hex(SALT + account + RandomUtil.randomNumbers(4));
         String secretKey = DigestUtil.md5Hex(SALT + account + RandomUtil.randomNumbers(8));
 
