@@ -34,7 +34,7 @@ import static cn.example.binapi.common.common.ResponseStatus.INTERFACE_EMPTY;
  * @since 2023-05-23
  */
 @RestController
-@RequestMapping("/analysis")
+@RequestMapping("analysis")
 @Slf4j
 public class AnalysisController {
 
