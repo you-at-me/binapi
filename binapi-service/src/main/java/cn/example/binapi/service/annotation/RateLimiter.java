@@ -1,4 +1,6 @@
-package cn.example.binapi.interfaces.annotation;
+package cn.example.binapi.service.annotation;
+
+import org.springframework.core.annotation.AliasFor;
 
 import java.lang.annotation.*;
 
@@ -15,7 +17,11 @@ public @interface RateLimiter {
     /**
      * 限流阈值
      */
+    @AliasFor("value")
     long limit() default 200;
+
+    @AliasFor("limit")
+    long value() default 200;
 
     /**
      * 限流时间窗口大小，单位毫秒
