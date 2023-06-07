@@ -16,6 +16,7 @@ public enum ResponseStatus {
     INTERFACE_PURCHASE_SUCCESS(20010,"接口购买成功"),
 
     REQUEST_ERROR(30010,"请求异常"),
+    FLOW_TRAFFIC(30001, "Rate limit exceeded"),
     INTERFACE_CALL_FAILED(30011,"远程接口调用失败"),
 
     PARAMS_ERROR(40000, "请求参数错误"),
