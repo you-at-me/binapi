@@ -1,7 +1,9 @@
 package cn.example.binapi.service.controller;
 
+import cn.example.binapi.common.common.BaseResponse;
 import cn.example.binapi.common.common.InterfaceIdRequest;
 import cn.example.binapi.common.common.InterfacePurchaseRequest;
+import cn.example.binapi.common.common.ResultUtils;
 import cn.example.binapi.common.constant.UserConstant;
 import cn.example.binapi.common.model.dto.interfaceinfo.InterfaceInfoAddRequest;
 import cn.example.binapi.common.model.dto.interfaceinfo.InterfaceInfoInvokeRequest;
@@ -10,8 +12,7 @@ import cn.example.binapi.common.model.dto.interfaceinfo.InterfaceInfoUpdateReque
 import cn.example.binapi.common.model.entity.InterfaceInfo;
 import cn.example.binapi.common.model.vo.InterfaceInfoVO;
 import cn.example.binapi.service.annotation.AuthCheck;
-import cn.example.binapi.common.common.BaseResponse;
-import cn.example.binapi.common.common.ResultUtils;
+import cn.example.binapi.service.annotation.RateLimiter;
 import cn.example.binapi.service.service.InterfaceInfoService;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.extern.slf4j.Slf4j;
@@ -62,6 +63,7 @@ public class InterfaceInfoController {
      * 上线接口
      */
     @PostMapping("online")
+    @RateLimiter(limit = 100, milTimeout = 10)
     public BaseResponse<Boolean> onlineInterfaceInfo(@RequestBody InterfaceInfoInvokeRequest idRequest, HttpServletRequest request) {
         return ResultUtils.success(interfaceInfoService.onlineInterfaceInfo(idRequest, request));
     }
@@ -87,6 +89,7 @@ public class InterfaceInfoController {
      * 接口调用
      */
     @PostMapping("invoke")
+    @RateLimiter
     public BaseResponse<Object> invokeInterface(@RequestBody InterfaceInfoInvokeRequest interfaceInfoInvokeRequest, HttpServletRequest request) {
         String result = interfaceInfoService.invokeInterface(interfaceInfoInvokeRequest, request);
         return ResultUtils.success(result);
