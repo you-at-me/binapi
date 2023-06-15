@@ -35,35 +35,34 @@ public class MainServiceImpl  implements MainService {
         Map<String, String> headers = mainServiceAuthentication.getHeaders(request);
         // 验证请求参数和密钥等是否合法
         boolean isAuth = mainServiceAuthentication.isAuth(headers);
-        if (isAuth) { // 接口有权限调用时，则改为根据实际请求的测试地址来进行调用，而并非写死
-            // 1、获取当前服务请求映射路径中的所有请求访问类名和方法，都是以短路径url地址，例如：[/main]
-            Map<String, String> requestMappingMap = acquire.requestMappingMap;
-            String url = headers.get("url");
-            String[] urlSplit = url.split(REGEX_STR);
-            String key = "[" + urlSplit[urlSplit.length - 1] + "]";
-            String typeAndMethod = requestMappingMap.get(key);
-            log.info("url: {}", url);
-            log.info("key: {}", key);
-            log.info("res: {}", typeAndMethod);
-            if (StrUtil.isBlank(typeAndMethod)) {
-                log.error("AuthService...res is null");
-                return null;
-            }
-            String[] split = typeAndMethod.split(DASH);
-            Object res;
-            try {
-                // 通过反射构造
-                Class<?> invokeClass = Class.forName(split[0]);
-                // 这里规定所有的请求路径映射的方法参数都是Object类型的，所以在每个请求路径参数接收的时候，必须使用Object类型进行参数的接收，而且由于是object对象，实例化对象需要从容器中拿到
-                Method classMethod = invokeClass.getMethod(split[1], Object.class);
-                log.info("classMethod: {}", classMethod);
-                // 调用执行对应的请求映射路径方法
-                res = classMethod.invoke(context.getBean(invokeClass), headers.get("body"));
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-            return String.valueOf(res);
+        if (!isAuth) return null;
+        // 接口有权限调用时，则改为根据实际请求的测试地址来进行调用，而并非写死
+        // 1、获取当前服务请求映射路径中的所有请求访问类名和方法，都是以短路径url地址，例如：[/main]
+        Map<String, String> requestMappingMap = acquire.requestMappingMap;
+        String url = headers.get("url");
+        String[] urlSplit = url.split(REGEX_STR);
+        String key = "[" + urlSplit[urlSplit.length - 1] + "]";
+        String typeAndMethod = requestMappingMap.get(key);
+        log.info("url: {}", url);
+        log.info("key: {}", key);
+        log.info("res: {}", typeAndMethod);
+        if (StrUtil.isBlank(typeAndMethod)) {
+            log.error("AuthService...res is null");
+            return null;
         }
-        return null;
+        String[] split = typeAndMethod.split(DASH);
+        Object res;
+        try {
+            // 通过反射构造
+            Class<?> invokeClass = Class.forName(split[0]);
+            // 这里规定所有的请求路径映射的方法参数都是Object类型的，所以在每个请求路径参数接收的时候，必须使用Object类型进行参数的接收，而且由于是object对象，实例化对象需要从容器中拿到
+            Method classMethod = invokeClass.getMethod(split[1], Object.class);
+            log.info("classMethod: {}", classMethod);
+            // 调用执行对应的请求映射路径方法
+            res = classMethod.invoke(context.getBean(invokeClass), headers.get("body"));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        return String.valueOf(res);
     }
 }
