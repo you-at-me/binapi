@@ -54,13 +54,14 @@ public class MainServiceImpl  implements MainService {
         Object res;
         try {
             // 通过反射构造
-            Class<?> invokeClass = Class.forName(split[0]);
+            Class<?> clazz = Class.forName(split[0]);
             // 这里规定所有的请求路径映射的方法参数都是Object类型的，所以在每个请求路径参数接收的时候，必须使用Object类型进行参数的接收，而且由于是object对象，实例化对象需要从容器中拿到
-            Method classMethod = invokeClass.getMethod(split[1], Object.class);
+            Method classMethod = clazz.getMethod(split[1], Object.class);
             log.info("classMethod: {}", classMethod);
             // 调用执行对应的请求映射路径方法
-            res = classMethod.invoke(context.getBean(invokeClass), headers.get("body"));
+            res = classMethod.invoke(context.getBean(clazz), headers.get("body"));
         } catch (Exception e) {
+            log.info("error: {}", e.getMessage());
             throw new RuntimeException(e);
         }
         return String.valueOf(res);
